@@ -62,6 +62,7 @@ public class App
     		String path = t.getRequestURI().getPath();
     		String res = "";
     		int statusCode = 200;
+    		System.out.println(path);
             
     		try {
     			if(path.equals("/api/v1/addActor")) {
