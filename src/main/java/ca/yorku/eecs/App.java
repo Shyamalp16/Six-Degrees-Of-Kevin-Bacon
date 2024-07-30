@@ -27,20 +27,14 @@ public class App
         server.setExecutor(null);
         server.start();
         System.out.printf("Server started on port %d...\n", PORT);
-        
-        Connection nb = new Connection();
-        nb.insertAuthor("HUIHUIHU");
     }
     
     static class MyHandler implements HttpHandler{
-    	@Override
-    	public void handle(HttpExchange t) throws IOException{
-//    		SETUP VARIABLES
-    		String path = t.getRequestURI().getPath();
+    	
+    	public JSONObject checkBody(HttpExchange t) throws IOException{
+//    		GET REQUEST BODY IN JSON FORMAT
     		String res = "";
     		int statusCode = 200;
-    		
-//    		GET REQUEST BODY IN JSON FORMAT
     		String body = new BufferedReader(new InputStreamReader(t.getRequestBody(), StandardCharsets.UTF_8))
                     .lines()
                     .collect(Collectors.joining("\n"));
@@ -58,12 +52,20 @@ public class App
                 OutputStream os = t.getResponseBody();
                 os.write(res.getBytes());
                 os.close();
-                return;
+                return null;
 			}
+            return jsonObject;
+    	}
+    	@Override
+    	public void handle(HttpExchange t) throws IOException{
+//    		SETUP VARIABLES
+    		String path = t.getRequestURI().getPath();
+    		String res = "";
+    		int statusCode = 200;
             
     		try {
     			if(path.equals("/api/v1/addActor")) {
-    				res = handleAddActor(jsonObject);
+    				res = handleAddActor(t);
     				statusCode = Integer.parseInt(res);
     			}else {
     				res = "Invalid Path";
@@ -85,9 +87,10 @@ public class App
     		os.close();
     	}
     	
-    	private String handleAddActor(JSONObject jsonObject) throws JSONException{
-            
-            String name = jsonObject.getString("name");
+    	private String handleAddActor(HttpExchange t) throws JSONException, IOException{
+    		Connection nb = new Connection();
+    		JSONObject jsonObject = checkBody(t);
+            String name = jsonObject.getString("actorName");
             String id = jsonObject.getString("actorId");
             
 //          IF INVALID REQUEST BODY 
@@ -95,6 +98,7 @@ public class App
             	return "400";
             }
 //    		ADD THE IF ALREADY IN DATABASE, RETURN 500
+            nb.insertActor(name, id);
             return "200";
     	}
     }

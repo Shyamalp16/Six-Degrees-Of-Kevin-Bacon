@@ -22,11 +22,11 @@ public class Connection {
 		
 	}
 	
-	public void insertAuthor(String author) {
-		final String statementTemplate = "MERGE (a:Author {author: $x})";
+	public void insertActor(String actor, String actorId) {
+		final String statementTemplate = "MERGE (a:actor {name: $x})";
 		final String keysAndValues = "x";
 		try(Session session = driver.session()){
-			session.writeTransaction(tx -> tx.run(statementTemplate, parameters(keysAndValues, author)));
+			session.writeTransaction(tx -> tx.run(statementTemplate, parameters(keysAndValues, actor)));
 		}
 	}
 }
