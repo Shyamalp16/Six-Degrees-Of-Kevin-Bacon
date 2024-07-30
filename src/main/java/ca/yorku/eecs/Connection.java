@@ -82,6 +82,7 @@ public class Connection {
 	    }
 	}
 
+
 	public boolean actorExists(String actorId) {
 	    try (Session session = driver.session()) {
 	        String query = "MATCH (a:Actor {id: $actorId}) RETURN a";
@@ -123,3 +124,5 @@ public class Connection {
 	}
 
 	}
+}
+
