@@ -68,6 +68,10 @@ public class App
     			if(path.equals("/api/v1/addActor")) {
     				res = handleAddActor(t);
     				statusCode = Integer.parseInt(res);
+    			}
+    			else if(path.equals("/api/v1/addMovie")) {
+    				res = handleAddMovie(t);
+    				statusCode = Integer.parseInt(res);
     			}else {
     				res = "Invalid Path";
     				t.sendResponseHeaders(404, res.getBytes().length);
@@ -91,16 +95,33 @@ public class App
     	private String handleAddActor(HttpExchange t) throws JSONException, IOException{
     		Connection nb = new Connection();
     		JSONObject jsonObject = checkBody(t);
-            String name = jsonObject.getString("actorName");
+            String name = jsonObject.getString("name");
             String id = jsonObject.getString("actorId");
+            String responseCode;
             
 //          IF INVALID REQUEST BODY 
             if(name.isEmpty() || id.isEmpty() || !id.matches("\\d+")) {
             	return "400";
             }
 //    		ADD THE IF ALREADY IN DATABASE, RETURN 500
-            nb.insertActor(name, id);
-            return "200";
+            responseCode = nb.insertActor(name, id);
+            return responseCode;
+    	}
+    	
+    	private String handleAddMovie(HttpExchange t) throws JSONException, IOException{
+    		Connection nb = new Connection();
+    		JSONObject jsonObject = checkBody(t);
+            String name = jsonObject.getString("name");
+            String id = jsonObject.getString("movieId");
+            String responseCode;
+            
+//          IF INVALID REQUEST BODY 
+            if(name.isEmpty() || id.isEmpty() || !id.matches("\\d+")) {
+            	return "400";
+            }
+//    		ADD THE IF ALREADY IN DATABASE, RETURN 500
+            responseCode = nb.insertMovie(name, id);
+            return responseCode;
     	}
     }
 }
