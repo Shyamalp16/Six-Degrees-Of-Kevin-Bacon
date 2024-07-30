@@ -123,5 +123,33 @@ public class App
             responseCode = nb.insertMovie(name, id);
             return responseCode;
     	}
+    	
+    	private String handleAddRelationship(HttpExchange t) throws JSONException, IOException {
+    	    Connection nb = new Connection();
+    	    JSONObject jsonObject = checkBody(t);
+    	    if (jsonObject == null) {
+    	        return "400";
+    	    }
+
+    	    String actorId = jsonObject.getString("actorId");
+    	    String movieId = jsonObject.getString("movieId");
+
+    	    if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("\\d+") || !movieId.matches("\\d+")) {
+    	        return "400";
+    	    }
+
+    	    // Check if the actor and movie exist in the database
+    	    if (!nb.actorExists(actorId) || !nb.movieExists(movieId)) {
+    	        return "404";
+    	    }
+
+    	    // Add the relationship and check for uniqueness
+    	    boolean added = nb.addRelationship(actorId, movieId);
+    	    if (!added) {
+    	        return "400"; // If the relationship already exists
+    	    }
+    	    return "200";
+    	}
+
     }
 }
