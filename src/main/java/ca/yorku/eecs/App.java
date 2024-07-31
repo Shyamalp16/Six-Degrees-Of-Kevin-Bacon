@@ -62,7 +62,6 @@ public class App
     		String path = t.getRequestURI().getPath();
     		String res = "";
     		int statusCode = 200;
-    		System.out.println(path);
             
     		try {
     			if(path.equals("/api/v1/addActor")) {
@@ -72,7 +71,10 @@ public class App
     			else if(path.equals("/api/v1/addMovie")) {
     				res = handleAddMovie(t);
     				statusCode = Integer.parseInt(res);
-    			}else {
+    			}else if(path.equals("/api/v1/addRelationship")){
+					res = handleAddRelationship(t);
+					statusCode = Integer.parseInt(res);
+				}else {
     				res = "Invalid Path";
     				t.sendResponseHeaders(404, res.getBytes().length);
     				OutputStream os = t.getResponseBody();
@@ -127,9 +129,6 @@ public class App
     	private String handleAddRelationship(HttpExchange t) throws JSONException, IOException {
     	    Connection nb = new Connection();
     	    JSONObject jsonObject = checkBody(t);
-    	    if (jsonObject == null) {
-    	        return "400";
-    	    }
 
     	    String actorId = jsonObject.getString("actorId");
     	    String movieId = jsonObject.getString("movieId");
@@ -140,14 +139,19 @@ public class App
 
     	    // Check if the actor and movie exist in the database
     	    if (!nb.actorExists(actorId) || !nb.movieExists(movieId)) {
+				System.out.println("ACTOR ID: " + nb.actorExists(actorId));
+				System.out.println("MOVIE ID: " + nb.movieExists(movieId));
     	        return "404";
     	    }
 
     	    // Add the relationship and check for uniqueness
     	    boolean added = nb.addRelationship(actorId, movieId);
+			System.out.println(added);
     	    if (!added) {
+				System.out.println("ALREADY EXISTs");
     	        return "400"; // If the relationship already exists
     	    }
+			System.out.println("ADDED NEW REL");
     	    return "200";
     	}
 

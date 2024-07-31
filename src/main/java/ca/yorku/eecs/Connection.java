@@ -77,7 +77,6 @@ public class Connection {
 			}			
 		}catch (Neo4jException e) {
 	        System.err.println("Error inserting actor: " + e.getMessage());
-	        // You might want to re-throw the exception or handle it in a way that's appropriate for your application
 	        throw new RuntimeException("Failed to insert actor", e);
 	    }
 	}
@@ -85,8 +84,9 @@ public class Connection {
 
 	public boolean actorExists(String actorId) {
 	    try (Session session = driver.session()) {
-	        String query = "MATCH (a:Actor {id: $actorId}) RETURN a";
-	        return session.run(query, Values.parameters("actorId", actorId)).hasNext();
+			final String checkStatement = "MATCH (a:actor {id: \"" + actorId +"\"}) RETURN a";
+	        // String query = "MATCH (a:Actor {id: $actorId}) RETURN a";
+	        return session.run(checkStatement, Values.parameters("actorId", actorId)).hasNext();
 	    } catch (Exception e) {
 	        e.printStackTrace();
 	        return false;
@@ -96,8 +96,9 @@ public class Connection {
 
 	public boolean movieExists(String movieId) {
 	    try (Session session = driver.session()) {
-	        String query = "MATCH (m:Movie {id: $movieId}) RETURN m";
-	        return session.run(query, Values.parameters("movieId", movieId)).hasNext();
+	        // String query = "MATCH (m:Movie {id: $movieId}) RETURN m";
+			final String checkStatement = "MATCH (m:movie {id: \"" + movieId +"\"}) RETURN m";
+	        return session.run(checkStatement, Values.parameters("movieId", movieId)).hasNext();
 	    } catch (Exception e) {
 	        e.printStackTrace();
 	        return false;
@@ -107,22 +108,23 @@ public class Connection {
 	public boolean addRelationship(String actorId, String movieId) {
 	    try (Session session = driver.session()) {
 	        // Check if the relationship already exists
-	        String checkQuery = "MATCH (a:Actor {id: $actorId})-[r:ACTED_IN]->(m:Movie {id: $movieId}) RETURN r";
+	        String checkQuery = "MATCH (a:actor {id: \"" + actorId + "\"})-[r:ACTED_IN]->(m:movie {id: \"" + movieId + "\"}) RETURN r";
 	        if (session.run(checkQuery, Values.parameters("actorId", actorId, "movieId", movieId)).hasNext()) {
 	            return false; // Relationship already exists
-	        }
-
-	        // Create the relationship
-	        String createQuery = "MATCH (a:Actor {id: $actorId}), (m:Movie {id: $movieId}) " +
+	        }else{
+				try(Session s = driver.session()){
+					// Create the relationship
+					String createQuery = "MATCH (a:actor {id: \"" + actorId + "\"}), (m:movie {id: \"" + movieId + "\"}) " +
 	                             "CREATE (a)-[:ACTED_IN]->(m)";
-	        session.run(createQuery, Values.parameters("actorId", actorId, "movieId", movieId));
-	        return true; // Relationship successfully created
+	        		s.run(createQuery, Values.parameters("actorId", actorId, "movieId", movieId));
+					return true; // Relationship successfully created
+				}
+			}
 	    } catch (Exception e) {
 	        e.printStackTrace();
 	        return false;
 	    }
 	}
-
-	}
 }
+
 
