@@ -60,24 +60,25 @@ public class App
     	public void handle(HttpExchange t) throws IOException{
 //    		SETUP VARIABLES
     		String path = t.getRequestURI().getPath();
+			String method = t.getRequestMethod();
     		String res = "";
     		int statusCode = 200;
             
     		try {
-    			if(path.equals("/api/v1/addActor")) {
+    			if(path.equals("/api/v1/addActor") && method.equals("PUT")) {
     				res = handleAddActor(t);
     				statusCode = Integer.parseInt(res);
     			}
-    			else if(path.equals("/api/v1/addMovie")) {
+    			else if(path.equals("/api/v1/addMovie") && method.equals("PUT")) {
     				res = handleAddMovie(t);
     				statusCode = Integer.parseInt(res);
-    			}else if(path.equals("/api/v1/addRelationship")){
+    			}else if(path.equals("/api/v1/addRelationship") && method.equals("PUT")){
 					res = handleAddRelationship(t);
 					statusCode = Integer.parseInt(res);
-				}else if(path.equals("/api/v1/getActor")){
+				}else if(path.equals("/api/v1/getActor") && method.equals("GET")){
 					res = handleGetActor(t);
 					statusCode = Integer.parseInt(res);
-				}else if(path.equals("/api/v1/hasRelationship")){
+				}else if(path.equals("/api/v1/hasRelationship") && method.equals("GET")){
 					res = handleHasRelationship(t);
 					// AT THIS POINT ONLY IF NO MOVIE/ACTOR EXISTS, WE WILL GET A 404 OTHERWISE IT WILL BE 200 BECAUSE WE ARE CHECKING FOR 400 OUTSIDE OF THE FUNCTION SO NO NEED TO PARSE ALL THE CODES 200 RESPONSE WILL BE DIFFERENT 
 					if(res == "404"){
@@ -85,7 +86,7 @@ public class App
 					}
 				}
 				else {
-    				res = "Invalid Path";
+    				res = "Invalid Path or Method";
     				t.sendResponseHeaders(404, res.getBytes().length);
     				OutputStream os = t.getResponseBody();
     				os.write(res.getBytes());
@@ -143,7 +144,7 @@ public class App
     	    String actorId = jsonObject.getString("actorId");
     	    String movieId = jsonObject.getString("movieId");
 
-    	    if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("\\d+") || !movieId.matches("\\d+")) {
+    	    if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("^nm\\d+$") || !movieId.matches("\\d+")) {
     	        responseCode = "404";
 				return responseCode;
     	    }
@@ -174,7 +175,7 @@ public class App
     	    String actorId = jsonObject.getString("actorId");
     	    String movieId = jsonObject.getString("movieId");
 
-			if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("\\d+") || !movieId.matches("\\d+")) {
+			if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("^nm\\d+$") || !movieId.matches("\\d+")) {
     	        responseCode = "404";
 				return responseCode;
     	    }
@@ -199,7 +200,7 @@ public class App
             String actorId = jsonObject.getString("actorId");
 			System.out.println(actorId);
 
-			if(actorId.isEmpty() || actorId.matches("\\d+")) {
+			if(actorId.isEmpty() || actorId.matches("^nm\\d+$")) {
 				return "404";
 			}
 
