@@ -12,10 +12,8 @@ import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.exceptions.Neo4jException;
-import org.neo4j.driver.v1.exceptions.ClientException;
 
 public class Connection {
 	private Driver driver;
@@ -89,7 +87,6 @@ public class Connection {
 	public boolean actorExists(String actorId) {
 	    try (Session session = driver.session()) {
 			final String checkStatement = "MATCH (a:actor {id: \"" + actorId +"\"}) RETURN a";
-	        // String query = "MATCH (a:Actor {id: $actorId}) RETURN a";
 	        return session.run(checkStatement, Values.parameters("actorId", actorId)).hasNext();
 	    } catch (Exception e) {
 	        e.printStackTrace();
@@ -100,7 +97,6 @@ public class Connection {
 
 	public boolean movieExists(String movieId) {
 	    try (Session session = driver.session()) {
-	        // String query = "MATCH (m:Movie {id: $movieId}) RETURN m";
 			final String checkStatement = "MATCH (m:movie {id: \"" + movieId +"\"}) RETURN m";
 	        return session.run(checkStatement, Values.parameters("movieId", movieId)).hasNext();
 	    } catch (Exception e) {
@@ -144,7 +140,6 @@ public class Connection {
 		try(Session session = driver.session()){ 
 			String checkQuery = "MATCH (a:actor) WHERE a.id = \"" + actorId + "\" RETURN a.name";
 			StatementResult cursor = session.run(checkQuery, Values.parameters("actorId", actorId));
-			// result.single().get("exists").asBoolean();
 			return(cursor.single().get("a.name").asString());
 		}catch(Exception e) {
 			e.printStackTrace();

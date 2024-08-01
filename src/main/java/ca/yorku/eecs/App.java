@@ -92,11 +92,10 @@ public class App
 						statusCode = Integer.parseInt(res);
 					}
 				}
-				// else if(path.equals("/api/v1/computeBaconNumber") && method.equals("GET")) {
-    			// 	res = computeBaconNumber(t);
-    			// 	statusCode = Integer.parseInt(res);
-    			// }
-				else {
+				else if(path.equals("/api/v1/computeBaconNumber") && method.equals("GET")) {
+    				res = computeBaconNumber(t);
+    				statusCode = Integer.parseInt(res);
+    			}else {
     				res = "Invalid Path or Method";
     				t.sendResponseHeaders(404, res.getBytes().length);
     				OutputStream os = t.getResponseBody();
@@ -266,5 +265,9 @@ public class App
 
 			return res;
 		}
-    }
+		
+		private String computeBaconNumber(HttpExchange t) throws IOException, JSONException {
+			return "";
+		}
+	}
 }
