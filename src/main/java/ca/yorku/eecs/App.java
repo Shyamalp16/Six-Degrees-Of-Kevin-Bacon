@@ -100,7 +100,7 @@ public class App
             String responseCode;
             
 //          IF INVALID REQUEST BODY 
-            if(name.isEmpty() || id.isEmpty() || !id.matches("\\d+")) {
+            if(name.isEmpty() || id.isEmpty() || !id.matches("^nm\\d+$")) {
             	return "400";
             }
 //    		ADD THE IF ALREADY IN DATABASE, RETURN 500
@@ -116,7 +116,7 @@ public class App
             String responseCode;
             
 //          IF INVALID REQUEST BODY 
-            if(name.isEmpty() || id.isEmpty() || !id.matches("\\d+")) {
+            if(name.isEmpty() || id.isEmpty() || !id.matches("^nm\\d+$")) {
             	return "400";
             }
 //    		ADD THE IF ALREADY IN DATABASE, RETURN 500
