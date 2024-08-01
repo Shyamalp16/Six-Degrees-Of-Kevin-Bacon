@@ -135,6 +135,12 @@ public class Connection {
 	        return false;
 	    }
 	}
+
+	public int computeBaconNumber(String actorId){
+		String kevinBaconID = "nm0000102";
+		
+		return 0;
+	}
 }
 
 
