@@ -2,6 +2,10 @@ package ca.yorku.eecs;
 
 
 import static org.neo4j.driver.v1.Values.parameters;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Driver;
@@ -134,6 +138,31 @@ public class Connection {
 	        e.printStackTrace();
 	        return false;
 	    }
+	}
+
+	public String getActorName(String actorId){
+		try(Session session = driver.session()){ 
+			String checkQuery = "MATCH (a:actor) WHERE a.id = \"" + actorId + "\" RETURN a.name";
+			StatementResult cursor = session.run(checkQuery, Values.parameters("actorId", actorId));
+			// result.single().get("exists").asBoolean();
+			return(cursor.single().get("a.name").asString());
+		}catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public String[] getActorMovies(String actorId){
+		List<String> movieNames = new ArrayList<>();
+		try(Session session = driver.session()){ 
+			String checkQuery = "MATCH (a:actor {id: \"" + actorId + "\"})-[r:ACTED_IN]-(b:movie) RETURN b.id";
+			StatementResult cursor = session.run(checkQuery, Values.parameters("actorId", actorId));
+			cursor.list().forEach(record -> movieNames.add(record.get("b.id").asString()));
+			return movieNames.toArray(new String[0]);
+		}catch(Exception e){
+			e.printStackTrace();
+			return null;
+		}
 	}
 }
 

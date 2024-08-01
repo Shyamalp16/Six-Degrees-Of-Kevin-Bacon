@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.sun.net.httpserver.HttpServer;
@@ -197,17 +199,34 @@ public class App
 			Connection nb = new Connection();
     		JSONObject jsonObject = checkBody(t);
             String actorId = jsonObject.getString("actorId");
-			System.out.println(actorId);
+			String res = "";
 
-			if(actorId.isEmpty() || actorId.matches("\\d+")) {
+
+			if(actorId.isEmpty() || !actorId.matches("\\d+")) {
+				System.out.println("APPARTENLY ITS EMPTY?");
 				return "404";
 			}
 
 			if(!nb.actorExists(actorId)){
+				System.out.println("APPARTENLY ITS DOESNT EXIST?");
 				return "404";
 			}
 
-			
+			String actorName = nb.getActorName(actorId);
+			String[] movieIds = nb.getActorMovies(actorId);
+
+			Map<String, Object> resMap = new LinkedHashMap<>();
+			resMap.put("actorId", actorId);
+			resMap.put("name", actorName);
+			resMap.put("movies", movieIds);
+
+			JSONObject resObj = new JSONObject(resMap);
+			// resObj.put("actorId", actorId);
+			// resObj.put("name", actorName);
+			// resObj.put("movies", movieIds);
+			res = resObj.toString();
+			System.out.println(res);
+
 			return "";
 		}
     }
