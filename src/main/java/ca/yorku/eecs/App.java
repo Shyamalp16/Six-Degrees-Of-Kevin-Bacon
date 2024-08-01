@@ -62,6 +62,7 @@ public class App
     	public void handle(HttpExchange t) throws IOException{
 //    		SETUP VARIABLES
     		String path = t.getRequestURI().getPath();
+			String method = t.getRequestMethod();
     		String res = "";
     		int statusCode = 200;
             
@@ -85,10 +86,11 @@ public class App
 					if(res == "404"){
 						statusCode = Integer.parseInt(res);
 					}
-				}else if(path.equals("/api/v1/computeBaconNumber") && method.equals("GET")) {
-    				res = computeBaconNumber(t);
-    				statusCode = Integer.parseInt(res);
-    			}
+				}
+				// else if(path.equals("/api/v1/computeBaconNumber") && method.equals("GET")) {
+    			// 	res = computeBaconNumber(t);
+    			// 	statusCode = Integer.parseInt(res);
+    			// }
 				else {
     				res = "Invalid Path or Method";
     				t.sendResponseHeaders(404, res.getBytes().length);
