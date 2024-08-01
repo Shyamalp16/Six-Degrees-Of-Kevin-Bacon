@@ -152,6 +152,19 @@ public class Connection {
 		}
 	}
 
+	public String getMovieName(String movieId){
+		try(Session session = driver.session()){ 
+			final String checkQuery = "MATCH (m:movie {id: \"" + movieId +"\"}) RETURN m.name";
+			String movieName;
+			StatementResult cursor = session.run(checkQuery, Values.parameters("movieId", movieId));
+			movieName = cursor.single().get("m.name").asString();
+			return movieName;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 	public String[] getActorMovies(String actorId){
 		List<String> movieNames = new ArrayList<>();
 		try(Session session = driver.session()){ 
@@ -159,6 +172,19 @@ public class Connection {
 			StatementResult cursor = session.run(checkQuery, Values.parameters("actorId", actorId));
 			cursor.list().forEach(record -> movieNames.add(record.get("b.id").asString()));
 			return movieNames.toArray(new String[0]);
+		}catch(Exception e){
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public String[] getMovieActors(String movieId){
+		List<String> actorNames = new ArrayList();
+		try(Session session = driver.session()){
+			String checkQuery = "MATCH (m:movie {id: \"" + movieId + "\"})-[r:ACTED_IN]-(a:actor) RETURN a.id";
+			StatementResult cursor = session.run(checkQuery, Values.parameters("movieId", movieId));
+			cursor.list().forEach(record -> actorNames.add(record.get("a.id").asString()));
+			return actorNames.toArray(new String[0]);
 		}catch(Exception e){
 			e.printStackTrace();
 			return null;

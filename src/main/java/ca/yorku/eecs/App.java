@@ -1,5 +1,4 @@
 package ca.yorku.eecs;
-
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -16,7 +15,6 @@ import com.sun.net.httpserver.HttpExchange;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
 
 
 public class App 
@@ -79,7 +77,14 @@ public class App
 					statusCode = Integer.parseInt(res);
 				}else if(path.equals("/api/v1/getActor") && method.equals("GET")){
 					res = handleGetActor(t);
-					statusCode = Integer.parseInt(res);
+					if(res == "404"){
+						statusCode = Integer.parseInt(res);
+					}
+				}else if(path.equals("/api/v1/getMovie") && method.equals("GET")){
+					res = handleGetMovie(t);
+					if(res == "404"){
+						statusCode = Integer.parseInt(res);
+					}
 				}else if(path.equals("/api/v1/hasRelationship") && method.equals("GET")){
 					res = handleHasRelationship(t);
 					// AT THIS POINT ONLY IF NO MOVIE/ACTOR EXISTS, WE WILL GET A 404 OTHERWISE IT WILL BE 200 BECAUSE WE ARE CHECKING FOR 400 OUTSIDE OF THE FUNCTION SO NO NEED TO PARSE ALL THE CODES 200 RESPONSE WILL BE DIFFERENT 
@@ -226,13 +231,40 @@ public class App
 			resMap.put("movies", movieIds);
 
 			JSONObject resObj = new JSONObject(resMap);
-			// resObj.put("actorId", actorId);
-			// resObj.put("name", actorName);
-			// resObj.put("movies", movieIds);
 			res = resObj.toString();
 			System.out.println(res);
 
-			return "";
+			return res;
+		}
+
+		private String handleGetMovie(HttpExchange t)  throws IOException, JSONException{
+			Connection nb = new Connection();
+    		JSONObject jsonObject = checkBody(t);
+            String movieId = jsonObject.getString("movieId");
+			String res = "";
+
+
+			if(movieId.isEmpty() || !movieId.matches("\\d+")) {
+				return "404";
+			}
+
+			if(!nb.movieExists(movieId)){
+				return "404";
+			}
+
+			String movieName = nb.getMovieName(movieId);
+			String[] actorIds = nb.getMovieActors(movieId);
+
+			Map<String, Object> resMap = new LinkedHashMap<>();
+			resMap.put("movieId", movieId);
+			resMap.put("name", movieName);
+			resMap.put("actors", actorIds);
+
+			JSONObject resObj = new JSONObject(resMap);
+			res = resObj.toString();
+			System.out.println(res);
+
+			return res;
 		}
     }
 }
