@@ -105,6 +105,16 @@ public class Connection {
 	    }
 	}
 
+	public boolean hasRelationship(String actorId, String movieId){
+		try(Session session = driver.session()){
+			String checkQuery = "MATCH (a:actor {id: \"" + actorId + "\"})-[r:ACTED_IN]->(m:movie {id: \"" + movieId + "\"}) RETURN r";
+			if (session.run(checkQuery, Values.parameters("actorId", actorId, "movieId", movieId)).hasNext()) {
+	            return true; // Relationship already exists
+	        }
+			return false;
+		}
+	}
+
 	public boolean addRelationship(String actorId, String movieId) {
 	    try (Session session = driver.session()) {
 	        // Check if the relationship already exists
