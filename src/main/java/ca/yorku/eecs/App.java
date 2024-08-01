@@ -62,7 +62,6 @@ public class App
     		String path = t.getRequestURI().getPath();
     		String res = "";
     		int statusCode = 200;
-    		System.out.println(path);
             
     		try {
     			if(path.equals("/api/v1/addActor")) {
@@ -72,7 +71,20 @@ public class App
     			else if(path.equals("/api/v1/addMovie")) {
     				res = handleAddMovie(t);
     				statusCode = Integer.parseInt(res);
-    			}else {
+    			}else if(path.equals("/api/v1/addRelationship")){
+					res = handleAddRelationship(t);
+					statusCode = Integer.parseInt(res);
+				}else if(path.equals("/api/v1/getActor")){
+					res = handleGetActor(t);
+					statusCode = Integer.parseInt(res);
+				}else if(path.equals("/api/v1/hasRelationship")){
+					res = handleHasRelationship(t);
+					// AT THIS POINT ONLY IF NO MOVIE/ACTOR EXISTS, WE WILL GET A 404 OTHERWISE IT WILL BE 200 BECAUSE WE ARE CHECKING FOR 400 OUTSIDE OF THE FUNCTION SO NO NEED TO PARSE ALL THE CODES 200 RESPONSE WILL BE DIFFERENT 
+					if(res == "404"){
+						statusCode = Integer.parseInt(res);
+					}
+				}
+				else {
     				res = "Invalid Path";
     				t.sendResponseHeaders(404, res.getBytes().length);
     				OutputStream os = t.getResponseBody();
@@ -84,7 +96,6 @@ public class App
     			res = "Internal Server Error";
     			statusCode = 500;
     		}
-    		
     		
     		t.sendResponseHeaders(statusCode, res.getBytes().length);
     		OutputStream os = t.getResponseBody();
@@ -123,5 +134,81 @@ public class App
             responseCode = nb.insertMovie(name, id);
             return responseCode;
     	}
+    	
+    	private String handleAddRelationship(HttpExchange t) throws JSONException, IOException {
+    	    Connection nb = new Connection();
+    	    JSONObject jsonObject = checkBody(t);
+			String responseCode;
+
+    	    String actorId = jsonObject.getString("actorId");
+    	    String movieId = jsonObject.getString("movieId");
+
+    	    if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("\\d+") || !movieId.matches("\\d+")) {
+    	        responseCode = "404";
+				return responseCode;
+    	    }
+
+    	    // Check if the actor and movie exist in the database
+    	    if (!nb.actorExists(actorId) || !nb.movieExists(movieId)) {
+    	        responseCode = "404";
+				return responseCode;
+    	    }
+
+    	    // Add the relationship and check for uniqueness
+    	    boolean added = nb.addRelationship(actorId, movieId);
+    	    if (!added) {
+    	        responseCode = "400";
+				return responseCode; // If the relationship already exists
+    	    }
+    	    responseCode = "200";
+			return responseCode;
+    	}
+
+		private String handleHasRelationship(HttpExchange t) throws IOException, JSONException {
+			Connection nb = new Connection();
+    	    JSONObject jsonObject = checkBody(t);
+			String responseCode;
+			String res = "";
+
+			
+    	    String actorId = jsonObject.getString("actorId");
+    	    String movieId = jsonObject.getString("movieId");
+
+			if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("\\d+") || !movieId.matches("\\d+")) {
+    	        responseCode = "404";
+				return responseCode;
+    	    }
+
+			if (!nb.actorExists(actorId) || !nb.movieExists(movieId)) {
+    	        responseCode = "404";
+				return responseCode;
+    	    }
+
+			boolean hasRel = nb.hasRelationship(actorId, movieId);
+			JSONObject resObj = new JSONObject();
+			resObj.put("actorId", actorId);
+			resObj.put("movieId", movieId);
+			resObj.put("hasRelationship", hasRel);
+			res = resObj.toString();
+			return res;
+		}
+
+		private String handleGetActor(HttpExchange t) throws IOException, JSONException {
+			Connection nb = new Connection();
+    		JSONObject jsonObject = checkBody(t);
+            String actorId = jsonObject.getString("actorId");
+			System.out.println(actorId);
+
+			if(actorId.isEmpty() || actorId.matches("\\d+")) {
+				return "404";
+			}
+
+			if(!nb.actorExists(actorId)){
+				return "404";
+			}
+
+			
+			return "";
+		}
     }
 }
