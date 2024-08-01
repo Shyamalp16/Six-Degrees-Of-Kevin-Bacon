@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.sun.net.httpserver.HttpServer;
@@ -62,16 +64,11 @@ public class App
     		String path = t.getRequestURI().getPath();
     		String res = "";
     		int statusCode = 200;
-    		System.out.println(path);
             
     		try {
-    			if(path.equals("/api/v1/addActor")) {
+    			if(path.equals("/api/v1/addActor") && method.equals("PUT")) {
     				res = handleAddActor(t);
     				statusCode = Integer.parseInt(res);
-<<<<<<< Updated upstream
-    			}else {
-    				res = "Invalid Path";
-=======
     			}
     			else if(path.equals("/api/v1/addMovie") && method.equals("PUT")) {
     				res = handleAddMovie(t);
@@ -94,7 +91,6 @@ public class App
     			}
 				else {
     				res = "Invalid Path or Method";
->>>>>>> Stashed changes
     				t.sendResponseHeaders(404, res.getBytes().length);
     				OutputStream os = t.getResponseBody();
     				os.write(res.getBytes());
@@ -106,7 +102,6 @@ public class App
     			statusCode = 500;
     		}
     		
-    		
     		t.sendResponseHeaders(statusCode, res.getBytes().length);
     		OutputStream os = t.getResponseBody();
     		os.write(res.getBytes());
@@ -116,19 +111,18 @@ public class App
     	private String handleAddActor(HttpExchange t) throws JSONException, IOException{
     		Connection nb = new Connection();
     		JSONObject jsonObject = checkBody(t);
-            String name = jsonObject.getString("actorName");
+            String name = jsonObject.getString("name");
             String id = jsonObject.getString("actorId");
+            String responseCode;
             
 //          IF INVALID REQUEST BODY 
             if(name.isEmpty() || id.isEmpty() || !id.matches("\\d+")) {
             	return "400";
             }
 //    		ADD THE IF ALREADY IN DATABASE, RETURN 500
-            nb.insertActor(name, id);
-            return "200";
+            responseCode = nb.insertActor(name, id);
+            return responseCode;
     	}
-<<<<<<< Updated upstream
-=======
     	
     	private String handleAddMovie(HttpExchange t) throws JSONException, IOException{
     		Connection nb = new Connection();
@@ -138,7 +132,7 @@ public class App
             String responseCode;
             
 //          IF INVALID REQUEST BODY 
-            if(name.isEmpty() || id.isEmpty() || !id.matches("^nm\\d+$")) {
+            if(name.isEmpty() || id.isEmpty() || !id.matches("\\d+")) {
             	return "400";
             }
 //    		ADD THE IF ALREADY IN DATABASE, RETURN 500
@@ -154,9 +148,9 @@ public class App
     	    String actorId = jsonObject.getString("actorId");
     	    String movieId = jsonObject.getString("movieId");
 
-    	    if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("^nm\\d+$") || !movieId.matches("^nm\\d+$")) {
+    	    if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("\\d+") || !movieId.matches("\\d+")) {
     	        responseCode = "404";
-				return responseCode;
+				      return responseCode;
     	    }
 
     	    // Check if the actor and movie exist in the database
@@ -185,7 +179,7 @@ public class App
     	    String actorId = jsonObject.getString("actorId");
     	    String movieId = jsonObject.getString("movieId");
 
-			if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("^nm\\d+$") || !movieId.matches("^nm\\d+$")) {
+			if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("\\d+") || !movieId.matches("\\d+")) {
     	        responseCode = "404";
 				return responseCode;
     	    }
@@ -208,38 +202,35 @@ public class App
 			Connection nb = new Connection();
     		JSONObject jsonObject = checkBody(t);
             String actorId = jsonObject.getString("actorId");
-			System.out.println(actorId);
+			String res = "";
 
-			if(actorId.isEmpty() || actorId.matches("^nm\\d+$")) {
+
+			if(actorId.isEmpty() || !actorId.matches("\\d+")) {
+				System.out.println("APPARTENLY ITS EMPTY?");
 				return "404";
 			}
 
 			if(!nb.actorExists(actorId)){
+				System.out.println("APPARTENLY ITS DOESNT EXIST?");
 				return "404";
 			}
 
-			
+			String actorName = nb.getActorName(actorId);
+			String[] movieIds = nb.getActorMovies(actorId);
+
+			Map<String, Object> resMap = new LinkedHashMap<>();
+			resMap.put("actorId", actorId);
+			resMap.put("name", actorName);
+			resMap.put("movies", movieIds);
+
+			JSONObject resObj = new JSONObject(resMap);
+			// resObj.put("actorId", actorId);
+			// resObj.put("name", actorName);
+			// resObj.put("movies", movieIds);
+			res = resObj.toString();
+			System.out.println(res);
+
 			return "";
 		}
-
-		private String computeBaconNumber(HttpExchange t) throws JSONException, IOException{
-			Connection nb = new Connection();
-    		JSONObject jsonObject = checkBody(t);
-            String actorId = jsonObject.getString("actorId");
-			String res = "";
-			System.out.println(actorId);
-
-
-			if(actorId.isEmpty() || actorId.matches("^nm\\d+$")) return "404";
-
-			if(!nb.actorExists(actorId)) return "404";
-			
-			int baconNumber = nb.computeBaconNumber(actorId);
-			JSONObject resObj = new JSONObject();
-			resObj.put("baconNumber", baconNumber);
-			res = resObj.toString();
-			return res;
-		}
->>>>>>> Stashed changes
     }
 }
