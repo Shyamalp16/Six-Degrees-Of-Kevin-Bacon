@@ -2,16 +2,18 @@ package ca.yorku.eecs;
 
 
 import static org.neo4j.driver.v1.Values.parameters;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.exceptions.Neo4jException;
-import org.neo4j.driver.v1.exceptions.ClientException;
 
 public class Connection {
 	private Driver driver;
@@ -85,7 +87,6 @@ public class Connection {
 	public boolean actorExists(String actorId) {
 	    try (Session session = driver.session()) {
 			final String checkStatement = "MATCH (a:actor {id: \"" + actorId +"\"}) RETURN a";
-	        // String query = "MATCH (a:Actor {id: $actorId}) RETURN a";
 	        return session.run(checkStatement, Values.parameters("actorId", actorId)).hasNext();
 	    } catch (Exception e) {
 	        e.printStackTrace();
@@ -96,7 +97,6 @@ public class Connection {
 
 	public boolean movieExists(String movieId) {
 	    try (Session session = driver.session()) {
-	        // String query = "MATCH (m:Movie {id: $movieId}) RETURN m";
 			final String checkStatement = "MATCH (m:movie {id: \"" + movieId +"\"}) RETURN m";
 	        return session.run(checkStatement, Values.parameters("movieId", movieId)).hasNext();
 	    } catch (Exception e) {
@@ -136,10 +136,54 @@ public class Connection {
 	    }
 	}
 
-	public int computeBaconNumber(String actorId){
-		String kevinBaconID = "nm0000102";
-		
-		return 0;
+	public String getActorName(String actorId){
+		try(Session session = driver.session()){ 
+			String checkQuery = "MATCH (a:actor) WHERE a.id = \"" + actorId + "\" RETURN a.name";
+			StatementResult cursor = session.run(checkQuery, Values.parameters("actorId", actorId));
+			return(cursor.single().get("a.name").asString());
+		}catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public String getMovieName(String movieId){
+		try(Session session = driver.session()){ 
+			final String checkQuery = "MATCH (m:movie {id: \"" + movieId +"\"}) RETURN m.name";
+			String movieName;
+			StatementResult cursor = session.run(checkQuery, Values.parameters("movieId", movieId));
+			movieName = cursor.single().get("m.name").asString();
+			return movieName;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public String[] getActorMovies(String actorId){
+		List<String> movieNames = new ArrayList<>();
+		try(Session session = driver.session()){ 
+			String checkQuery = "MATCH (a:actor {id: \"" + actorId + "\"})-[r:ACTED_IN]-(b:movie) RETURN b.id";
+			StatementResult cursor = session.run(checkQuery, Values.parameters("actorId", actorId));
+			cursor.list().forEach(record -> movieNames.add(record.get("b.id").asString()));
+			return movieNames.toArray(new String[0]);
+		}catch(Exception e){
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public String[] getMovieActors(String movieId){
+		List<String> actorNames = new ArrayList();
+		try(Session session = driver.session()){
+			String checkQuery = "MATCH (m:movie {id: \"" + movieId + "\"})-[r:ACTED_IN]-(a:actor) RETURN a.id";
+			StatementResult cursor = session.run(checkQuery, Values.parameters("movieId", movieId));
+			cursor.list().forEach(record -> actorNames.add(record.get("a.id").asString()));
+			return actorNames.toArray(new String[0]);
+		}catch(Exception e){
+			e.printStackTrace();
+			return null;
+		}
 	}
 }
 

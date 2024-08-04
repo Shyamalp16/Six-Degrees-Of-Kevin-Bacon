@@ -1,11 +1,12 @@
 package ca.yorku.eecs;
-
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.sun.net.httpserver.HttpServer;
@@ -14,7 +15,6 @@ import com.sun.net.httpserver.HttpExchange;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
 
 
 public class App 
@@ -77,7 +77,14 @@ public class App
 					statusCode = Integer.parseInt(res);
 				}else if(path.equals("/api/v1/getActor") && method.equals("GET")){
 					res = handleGetActor(t);
-					statusCode = Integer.parseInt(res);
+					if(res == "404"){
+						statusCode = Integer.parseInt(res);
+					}
+				}else if(path.equals("/api/v1/getMovie") && method.equals("GET")){
+					res = handleGetMovie(t);
+					if(res == "404"){
+						statusCode = Integer.parseInt(res);
+					}
 				}else if(path.equals("/api/v1/hasRelationship") && method.equals("GET")){
 					res = handleHasRelationship(t);
 					// AT THIS POINT ONLY IF NO MOVIE/ACTOR EXISTS, WE WILL GET A 404 OTHERWISE IT WILL BE 200 BECAUSE WE ARE CHECKING FOR 400 OUTSIDE OF THE FUNCTION SO NO NEED TO PARSE ALL THE CODES 200 RESPONSE WILL BE DIFFERENT 
@@ -85,7 +92,10 @@ public class App
 						statusCode = Integer.parseInt(res);
 					}
 				}
-				else {
+				else if(path.equals("/api/v1/computeBaconNumber") && method.equals("GET")) {
+    				res = computeBaconNumber(t);
+    				statusCode = Integer.parseInt(res);
+    			}else {
     				res = "Invalid Path or Method";
     				t.sendResponseHeaders(404, res.getBytes().length);
     				OutputStream os = t.getResponseBody();
@@ -112,7 +122,7 @@ public class App
             String responseCode;
             
 //          IF INVALID REQUEST BODY 
-            if(name.isEmpty() || id.isEmpty() || !id.matches("^nm\\d+$")) {
+            if(name.isEmpty() || id.isEmpty() || !id.matches("\\d+")) {
             	return "400";
             }
 //    		ADD THE IF ALREADY IN DATABASE, RETURN 500
@@ -128,7 +138,7 @@ public class App
             String responseCode;
             
 //          IF INVALID REQUEST BODY 
-            if(name.isEmpty() || id.isEmpty() || !id.matches("^nm\\d+$")) {
+            if(name.isEmpty() || id.isEmpty() || !id.matches("\\d+")) {
             	return "400";
             }
 //    		ADD THE IF ALREADY IN DATABASE, RETURN 500
@@ -144,9 +154,9 @@ public class App
     	    String actorId = jsonObject.getString("actorId");
     	    String movieId = jsonObject.getString("movieId");
 
-    	    if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("^nm\\d+$") || !movieId.matches("^nm\\d+$")) {
+    	    if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("\\d+") || !movieId.matches("\\d+")) {
     	        responseCode = "404";
-				return responseCode;
+				      return responseCode;
     	    }
 
     	    // Check if the actor and movie exist in the database
@@ -175,7 +185,7 @@ public class App
     	    String actorId = jsonObject.getString("actorId");
     	    String movieId = jsonObject.getString("movieId");
 
-			if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("^nm\\d+$") || !movieId.matches("^nm\\d+$")) {
+			if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("\\d+") || !movieId.matches("\\d+")) {
     	        responseCode = "404";
 				return responseCode;
     	    }
@@ -198,18 +208,66 @@ public class App
 			Connection nb = new Connection();
     		JSONObject jsonObject = checkBody(t);
             String actorId = jsonObject.getString("actorId");
-			System.out.println(actorId);
+			String res = "";
 
-			if(actorId.isEmpty() || actorId.matches("^nm\\d+$")) {
+
+			if(actorId.isEmpty() || !actorId.matches("\\d+")) {
+				System.out.println("APPARTENLY ITS EMPTY?");
 				return "404";
 			}
 
 			if(!nb.actorExists(actorId)){
+				System.out.println("APPARTENLY ITS DOESNT EXIST?");
 				return "404";
 			}
 
-			
+			String actorName = nb.getActorName(actorId);
+			String[] movieIds = nb.getActorMovies(actorId);
+
+			Map<String, Object> resMap = new LinkedHashMap<>();
+			resMap.put("actorId", actorId);
+			resMap.put("name", actorName);
+			resMap.put("movies", movieIds);
+
+			JSONObject resObj = new JSONObject(resMap);
+			res = resObj.toString();
+			System.out.println(res);
+
+			return res;
+		}
+
+		private String handleGetMovie(HttpExchange t)  throws IOException, JSONException{
+			Connection nb = new Connection();
+    		JSONObject jsonObject = checkBody(t);
+            String movieId = jsonObject.getString("movieId");
+			String res = "";
+
+
+			if(movieId.isEmpty() || !movieId.matches("\\d+")) {
+				return "404";
+			}
+
+			if(!nb.movieExists(movieId)){
+				return "404";
+			}
+
+			String movieName = nb.getMovieName(movieId);
+			String[] actorIds = nb.getMovieActors(movieId);
+
+			Map<String, Object> resMap = new LinkedHashMap<>();
+			resMap.put("movieId", movieId);
+			resMap.put("name", movieName);
+			resMap.put("actors", actorIds);
+
+			JSONObject resObj = new JSONObject(resMap);
+			res = resObj.toString();
+			System.out.println(res);
+
+			return res;
+		}
+		
+		private String computeBaconNumber(HttpExchange t) throws IOException, JSONException {
 			return "";
 		}
-    }
+	}
 }
