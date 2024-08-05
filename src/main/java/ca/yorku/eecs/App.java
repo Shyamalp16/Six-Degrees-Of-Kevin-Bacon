@@ -97,7 +97,13 @@ public class App
     				if(res == "404"){
 						statusCode = Integer.parseInt(res);
 					}
-    			}else {
+    			}else if(path.equals("/api/v1/computeBaconPath") && method.equals("GET")){
+					res = computeBaconPath(t);
+    				if(res == "404"){
+						statusCode = Integer.parseInt(res);
+					}
+				}
+				else {
     				res = "Invalid Path or Method";
     				t.sendResponseHeaders(404, res.getBytes().length);
     				OutputStream os = t.getResponseBody();
@@ -285,6 +291,25 @@ public class App
 			System.out.println(res);
 
 			return res;
+		}
+
+		private String computeBaconPath(HttpExchange t) throws IOException, JSONException {
+			Connection nb = new Connection();
+			JSONObject jsonObject = checkBody(t);
+            String actorId = jsonObject.getString("actorId");
+			String res = "";
+
+			if(actorId.isEmpty() || !actorId.matches("^nm\\d+$")) {
+				return "404";
+			}
+			Object[] baconPath = nb.getBaconPath(actorId);
+			JSONObject resObj = new JSONObject();
+			resObj.put("baconPath", baconPath);
+			res = resObj.toString();
+			System.out.println(res);
+
+			return res;
+
 		}
 	}
 }

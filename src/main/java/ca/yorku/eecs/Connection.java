@@ -15,6 +15,8 @@ import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.exceptions.Neo4jException;
+import org.neo4j.driver.v1.types.Node;
+import org.neo4j.driver.v1.types.Path;
 
 public class Connection {
 	private Driver driver;
@@ -203,6 +205,30 @@ public class Connection {
 				return -1;
             }
         }
+	}
+
+	public Object[] getBaconPath(String actorId){
+		
+		if(actorId.equals("nm0000102"))//If Kevin Bacon Querried return 0
+			return new String[0];
+	 try (Session session = driver.session()) { //Compute the path to kevin and devide by 2 in order to not double count
+		String query = "MATCH p = shortestPath((a1:actor {id: \"" + actorId + "\"})-[*]-(a2:actor {id: 'nm0000102'})) RETURN p AS path";
+		StatementResult result = session.run(query, Values.parameters("actorId", actorId));
+		
+		if (result.hasNext()) {
+			Record record = result.next();
+			Path baconPath = record.get("path").asPath();
+			List<String> actorIds = new ArrayList<>();
+            for (Node node : baconPath.nodes()) {
+                actorIds.add(node.get("id").asString());
+            }
+
+			return actorIds.toArray();
+		} else {
+			System.out.println(actorId + " is not connected to Kevin Bacon.");
+			return new String[0];
+			}
+		}
 	}
 }
 
