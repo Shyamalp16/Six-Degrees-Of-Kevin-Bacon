@@ -94,8 +94,16 @@ public class App
 				}
 				else if(path.equals("/api/v1/computeBaconNumber") && method.equals("GET")) {
     				res = computeBaconNumber(t);
-    				statusCode = Integer.parseInt(res);
-    			}else {
+    				if(res == "404"){
+						statusCode = Integer.parseInt(res);
+					}
+    			}else if(path.equals("/api/v1/computeBaconPath") && method.equals("GET")){
+					res = computeBaconPath(t);
+    				if(res == "404"){
+						statusCode = Integer.parseInt(res);
+					}
+				}
+				else {
     				res = "Invalid Path or Method";
     				t.sendResponseHeaders(404, res.getBytes().length);
     				OutputStream os = t.getResponseBody();
@@ -122,7 +130,7 @@ public class App
             String responseCode;
             
 //          IF INVALID REQUEST BODY 
-            if(name.isEmpty() || id.isEmpty() || !id.matches("\\d+")) {
+            if(name.isEmpty() || id.isEmpty() || !id.matches("^nm\\d+$")) {
             	return "400";
             }
 //    		ADD THE IF ALREADY IN DATABASE, RETURN 500
@@ -138,7 +146,7 @@ public class App
             String responseCode;
             
 //          IF INVALID REQUEST BODY 
-            if(name.isEmpty() || id.isEmpty() || !id.matches("\\d+")) {
+            if(name.isEmpty() || id.isEmpty() || !id.matches("^nm\\d+$")) {
             	return "400";
             }
 //    		ADD THE IF ALREADY IN DATABASE, RETURN 500
@@ -154,7 +162,7 @@ public class App
     	    String actorId = jsonObject.getString("actorId");
     	    String movieId = jsonObject.getString("movieId");
 
-    	    if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("\\d+") || !movieId.matches("\\d+")) {
+    	    if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("^nm\\d+$") || !movieId.matches("^nm\\d+$")) {
     	        responseCode = "404";
 				      return responseCode;
     	    }
@@ -185,7 +193,7 @@ public class App
     	    String actorId = jsonObject.getString("actorId");
     	    String movieId = jsonObject.getString("movieId");
 
-			if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("\\d+") || !movieId.matches("\\d+")) {
+			if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("^nm\\d+$") || !movieId.matches("^nm\\d+$")) {
     	        responseCode = "404";
 				return responseCode;
     	    }
@@ -211,7 +219,7 @@ public class App
 			String res = "";
 
 
-			if(actorId.isEmpty() || !actorId.matches("\\d+")) {
+			if(actorId.isEmpty() || !actorId.matches("^nm\\d+$")) {
 				System.out.println("APPARTENLY ITS EMPTY?");
 				return "404";
 			}
@@ -243,7 +251,7 @@ public class App
 			String res = "";
 
 
-			if(movieId.isEmpty() || !movieId.matches("\\d+")) {
+			if(movieId.isEmpty() || !movieId.matches("^nm\\d+$")) {
 				return "404";
 			}
 
@@ -267,7 +275,41 @@ public class App
 		}
 		
 		private String computeBaconNumber(HttpExchange t) throws IOException, JSONException {
-			return "";
+			Connection nb = new Connection();
+			JSONObject jsonObject = checkBody(t);
+            String actorId = jsonObject.getString("actorId");
+			String res = "";
+			
+			if(actorId.isEmpty() || !actorId.matches("^nm\\d+$")) {
+				return "404";
+			}
+		
+			int baconNumber = nb.getBaconNumber(actorId);
+			JSONObject resObj = new JSONObject();
+			resObj.put("baconNumber", baconNumber);
+			res = resObj.toString();
+			System.out.println(res);
+
+			return res;
+		}
+
+		private String computeBaconPath(HttpExchange t) throws IOException, JSONException {
+			Connection nb = new Connection();
+			JSONObject jsonObject = checkBody(t);
+            String actorId = jsonObject.getString("actorId");
+			String res = "";
+
+			if(actorId.isEmpty() || !actorId.matches("^nm\\d+$")) {
+				return "404";
+			}
+			Object[] baconPath = nb.getBaconPath(actorId);
+			JSONObject resObj = new JSONObject();
+			resObj.put("baconPath", baconPath);
+			res = resObj.toString();
+			System.out.println(res);
+
+			return res;
+
 		}
 	}
 }
