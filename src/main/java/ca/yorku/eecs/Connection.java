@@ -10,6 +10,7 @@ import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
+import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.Values;
@@ -184,6 +185,24 @@ public class Connection {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	public int getBaconNumber(String actorId){
+			if(actorId.equals("nm0000102"))//If Kevin Bacon Querried return 0
+				return 0;
+		 try (Session session = driver.session()) { //Compute the path to kevin and devide by 2 in order to not double count
+            String query = "MATCH p = shortestPath((a1:actor {id: \"" + actorId + "\"})-[*]-(a2:actor {id: 'nm0000102'})) RETURN length(p) / 2 AS degree";
+            StatementResult result = session.run(query, Values.parameters("actorId", actorId));
+			
+            if (result.hasNext()) {
+                Record record = result.next();
+                int baconNumber = record.get("degree").asInt();
+				return baconNumber;
+            } else {
+                System.out.println(actorId + " is not connected to Kevin Bacon.");
+				return -1;
+            }
+        }
 	}
 }
 
