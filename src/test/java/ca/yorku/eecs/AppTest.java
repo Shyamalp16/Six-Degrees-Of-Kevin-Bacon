@@ -142,4 +142,79 @@ public class AppTest extends TestCase
             fail("Exception Occured" + e.getMessage());
         }
     }
+
+    public void testaddRelationshipPass(){
+        try{
+            URL url = new URL("http://localhost:8080/api/v1/addRelationship");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("PUT");
+            con.setDoOutput(true);
+            con.setRequestProperty("Content-Type", "application/json; utf-8");
+            con.setRequestProperty("Accept", "application/json");
+
+            String jsonInputString = "{\"actorId\": \"nm11\", \"movieId\": \"nm101010111\"}";
+            System.out.println(jsonInputString);
+            try(OutputStream os = con.getOutputStream()){
+                byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            int code = con.getResponseCode();
+            System.out.println("Add Relationship Pass gave " + code);
+            assertEquals(200, code);
+        }catch(IOException e){
+            // e.printStackTrace();
+            fail("Exception Occured" + e.getMessage());
+        }
+    }
+
+    public void testaddRelationshipFail(){
+        try{
+            URL url = new URL("http://localhost:8080/api/v1/addRelationship");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("PUT");
+            con.setDoOutput(true);
+            con.setRequestProperty("Content-Type", "application/json; utf-8");
+            con.setRequestProperty("Accept", "application/json");
+
+            String jsonInputString = "{\"actorId\": \"nm11\", \"movieId\": \"nm101010111\"}";
+            System.out.println(jsonInputString);
+            try(OutputStream os = con.getOutputStream()){
+                byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            int code = con.getResponseCode();
+            System.out.println("Add Relationship Fail gave " + code);
+            assertEquals(500, code);
+        }catch(IOException e){
+            // e.printStackTrace();
+            fail("Exception Occured" + e.getMessage());
+        }
+    }
+
+    public void testgetActorPass(){
+        try{
+            URL url = new URL("http://localhost:8080/api/v1/getActor");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setDoOutput(true);
+            con.setRequestProperty("Content-Type", "application/json; utf-8");
+            con.setRequestProperty("Accept", "application/json");
+
+            String jsonInputString = "{\"actorId\": \"nm10101011\"}";
+            System.out.println(jsonInputString);
+            try(OutputStream os = con.getOutputStream()){
+                byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            int code = con.getResponseCode();
+            System.out.println("Get Actor Pass Gave " + code);
+            assertEquals(200, code);
+        }catch(IOException e){
+            // e.printStackTrace();
+            fail("Exception Occured" + e.getMessage());
+        }
+    }
 }

@@ -247,7 +247,6 @@ public class App
 			JSONObject resObj = new JSONObject(resMap);
 			res = resObj.toString();
 			System.out.println(res);
-
 			return res;
 		}
 
