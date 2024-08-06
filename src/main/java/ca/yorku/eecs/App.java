@@ -85,6 +85,7 @@ public class App
 					if(res == "404"){
 						statusCode = Integer.parseInt(res);
 					}
+					System.out.println(statusCode);
 				}else if(path.equals("/api/v1/hasRelationship") && method.equals("GET")){
 					res = handleHasRelationship(t);
 					// AT THIS POINT ONLY IF NO MOVIE/ACTOR EXISTS, WE WILL GET A 404 OTHERWISE IT WILL BE 200 BECAUSE WE ARE CHECKING FOR 400 OUTSIDE OF THE FUNCTION SO NO NEED TO PARSE ALL THE CODES 200 RESPONSE WILL BE DIFFERENT 
@@ -221,9 +222,30 @@ public class App
 
 		private String handleGetActor(HttpExchange t) throws IOException, JSONException {
 			Connection nb = new Connection();
-    		JSONObject jsonObject = checkBody(t);
-            String actorId = jsonObject.getString("actorId");
+    		String query = t.getRequestURI().getQuery();
+			String actorId = null;
 			String res = "";
+			int statusCode;
+
+			if(query != null){
+				for(String param: query.split("&")){
+					String[] pair = param.split("=");
+					if(pair.length == 2 && pair[0].equals("actorId")){
+						actorId = pair[1];
+						break;
+					}
+				}
+			}
+
+			if(actorId == null){
+				res = "INVALD BODY";
+				statusCode = 400;
+                t.sendResponseHeaders(statusCode, res.getBytes().length);
+                OutputStream os = t.getResponseBody();
+                os.write(res.getBytes());
+                os.close();
+                return null;
+			}
 
 
 			if(actorId.isEmpty() || !actorId.matches("^nm\\d+$")) {
@@ -252,16 +274,40 @@ public class App
 
 		private String handleGetMovie(HttpExchange t)  throws IOException, JSONException{
 			Connection nb = new Connection();
-    		JSONObject jsonObject = checkBody(t);
-            String movieId = jsonObject.getString("movieId");
+    		String query = t.getRequestURI().getQuery();
+			String movieId = null;
 			String res = "";
+			int statusCode;
 
+			if(query != null){
+				for(String param: query.split("&")){
+					String[] pair = param.split("=");
+					if(pair.length == 2 && pair[0].equals("movieId")){
+						movieId = pair[1];
+						break;
+					}
+				}
+			}
+
+			if(movieId == null){
+				res = "INVALD BODY";
+				statusCode = 400;
+                t.sendResponseHeaders(statusCode, res.getBytes().length);
+                OutputStream os = t.getResponseBody();
+                os.write(res.getBytes());
+                os.close();
+                return null;
+			}
+
+			System.out.println(movieId);
 
 			if(movieId.isEmpty() || !movieId.matches("^nm\\d+$")) {
+				System.out.println("APPARENTLY ITS EMPTY");
 				return "404";
 			}
 
 			if(!nb.movieExists(movieId)){
+				System.out.println("MOvie doesnt exist");
 				return "404";
 			}
 
