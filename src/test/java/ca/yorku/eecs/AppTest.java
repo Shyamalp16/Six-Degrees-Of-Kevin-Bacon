@@ -208,6 +208,22 @@ public class AppTest extends TestCase
             fail("Exception Occurred: " + e.getMessage());
         }
     }
+
+    public void testgetActorFail() {
+        try {
+            // Append the actorId as a query parameter
+            URL url = new URL("http://localhost:8080/api/v1/getActor?actorId=nm128201011011");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept", "application/json");
+    
+            int code = con.getResponseCode();
+            System.out.println("Get Actor Pass Gave " + code);
+            assertEquals(404, code);
+        } catch (IOException e) {
+            fail("Exception Occurred: " + e.getMessage());
+        }
+    }
     
     public void testgetMoviePass() {
         try {
@@ -220,6 +236,22 @@ public class AppTest extends TestCase
             int code = con.getResponseCode();
             System.out.println("Get Movie Pass Gave " + code);
             assertEquals(200, code);
+        } catch (IOException e) {
+            fail("Exception Occurred: " + e.getMessage());
+        }
+    }
+
+    public void testgetMovieFail() {
+        try {
+            // Append the movieId as a query parameter
+            URL url = new URL("http://localhost:8080/api/v1/getMovie?movieId=nm101012330111");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept", "application/json");
+    
+            int code = con.getResponseCode();
+            System.out.println("Get Movie Pass Gave " + code);
+            assertEquals(404, code);
         } catch (IOException e) {
             fail("Exception Occurred: " + e.getMessage());
         }
