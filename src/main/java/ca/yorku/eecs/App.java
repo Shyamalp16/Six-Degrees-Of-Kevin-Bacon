@@ -134,6 +134,10 @@ public class App
             	return "400";
             }
 //    		ADD THE IF ALREADY IN DATABASE, RETURN 500
+
+			if(nb.actorExists(id)){
+				return "500";
+			}
             responseCode = nb.insertActor(name, id);
             return responseCode;
     	}
@@ -150,6 +154,9 @@ public class App
             	return "400";
             }
 //    		ADD THE IF ALREADY IN DATABASE, RETURN 500
+			if(nb.movieExists(id)){
+				return "500";
+			}
             responseCode = nb.insertMovie(name, id);
             return responseCode;
     	}
