@@ -133,10 +133,10 @@ public class App
             if(name.isEmpty() || id.isEmpty() || !id.matches("^nm\\d+$")) {
             	return "400";
             }
-//    		ADD THE IF ALREADY IN DATABASE, RETURN 500
+//    		ADD THE IF ALREADY IN DATABASE, RETURN 400
 
 			if(nb.actorExists(id)){
-				return "500";
+				return "400";
 			}
             responseCode = nb.insertActor(name, id);
             return responseCode;
@@ -153,9 +153,9 @@ public class App
             if(name.isEmpty() || id.isEmpty() || !id.matches("^nm\\d+$")) {
             	return "400";
             }
-//    		ADD THE IF ALREADY IN DATABASE, RETURN 500
+//    		ADD THE IF ALREADY IN DATABASE, RETURN 400
 			if(nb.movieExists(id)){
-				return "500";
+				return "400";
 			}
             responseCode = nb.insertMovie(name, id);
             return responseCode;
