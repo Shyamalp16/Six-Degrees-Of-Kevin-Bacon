@@ -193,22 +193,42 @@ public class App
 
 		private String handleHasRelationship(HttpExchange t) throws IOException, JSONException {
 			Connection nb = new Connection();
-    	    JSONObject jsonObject = checkBody(t);
-			String responseCode;
+    	    String query = t.getRequestURI().getQuery();
+			String actorId = null;
+			String movieId = null;
+			int statusCode;
 			String res = "";
 
+			if(query != null){
+				for(String param: query.split("&")){
+					String[] pair = param.split("=");
+					if(pair.length == 2 && pair[0].equals("actorId")){
+						actorId = pair[1];
+					}else if(pair.length == 2 && pair[0].equals("movieId")){
+						movieId = pair[1];
+						break;
+					}
+				}
+			}
+
+			if(actorId == null || movieId == null){
+				res = "INVALD BODY";
+				statusCode = 400;
+                t.sendResponseHeaders(statusCode, res.getBytes().length);
+                OutputStream os = t.getResponseBody();
+                os.write(res.getBytes());
+                os.close();
+                return null;
+			}
 			
-    	    String actorId = jsonObject.getString("actorId");
-    	    String movieId = jsonObject.getString("movieId");
+    	    
 
 			if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("^nm\\d+$") || !movieId.matches("^nm\\d+$")) {
-    	        responseCode = "404";
-				return responseCode;
+    	        return "404";
     	    }
 
 			if (!nb.actorExists(actorId) || !nb.movieExists(movieId)) {
-    	        responseCode = "404";
-				return responseCode;
+    	        return "404";	
     	    }
 
 			boolean hasRel = nb.hasRelationship(actorId, movieId);
@@ -216,6 +236,9 @@ public class App
 			resObj.put("actorId", actorId);
 			resObj.put("movieId", movieId);
 			resObj.put("hasRelationship", hasRel);
+			if(!hasRel){
+				return "404";
+			}
 			res = resObj.toString();
 			return res;
 		}
