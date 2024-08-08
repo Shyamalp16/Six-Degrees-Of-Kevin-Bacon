@@ -86,6 +86,40 @@ public class Connection {
 	    }
 	}
 
+	public String deleteMovie(String movieId){
+		final String remRel = "MATCH (m:movie {id: \"" + movieId + "\"})<-[r:ACTED_IN]-() DELETE r";
+		final String checkStatement = "MATCH (m:movie {id: \"" + movieId +"\"}) RETURN COUNT(m) > 0 as exists";
+		final String deleteStatement = "MATCH (m:movie {id: \"" + movieId +"\"}) DELETE m";	
+
+		try(Session session = driver.session()){
+//			CHECK IF IT EXISTS
+			boolean movieExists = session.readTransaction(tx -> {
+				StatementResult result = tx.run(checkStatement, parameters("id", movieId));
+				return result.single().get("exists").asBoolean();
+			});
+			
+//			IF IT DOES NOT, THROW ERROR AND RETURN 404
+			if(!movieExists) {
+				System.out.println("Movie with ID " + movieId + " Doesnt Exist.");
+				return "400";
+			}else {
+				// CHECK IF THERE ARE ANY RELATIONSHIPS, IF YES REMOVE THEM FIRST
+				try(Session s1 = driver.session()){
+					System.out.println("ENTERS");
+					s1.writeTransaction(tx -> tx.run(remRel, parameters("id", movieId)));
+				}
+//				IF YES, OPEN A NEW SESSION AND DELETEIT
+				try (Session s = driver.session()){
+					s.writeTransaction(tx -> tx.run(deleteStatement, parameters("id", movieId)));
+				}
+				return "200";
+			}			
+		}catch (Neo4jException e) {
+			System.err.println("Error Deleting Movie: " + e.getMessage());
+			throw new RuntimeException("Failed to Delete Movie", e);
+		}
+	}
+
 
 	public boolean actorExists(String actorId) {
 	    try (Session session = driver.session()) {

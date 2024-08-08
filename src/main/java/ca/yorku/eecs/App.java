@@ -68,8 +68,10 @@ public class App
     			if(path.equals("/api/v1/addActor") && method.equals("PUT")) {
     				res = handleAddActor(t);
     				statusCode = Integer.parseInt(res);
-    			}
-    			else if(path.equals("/api/v1/addMovie") && method.equals("PUT")) {
+    			}else if(path.equals("/api/v1/deleteMovie") && method.equals("DELETE")){
+					res = handleDeleteMovie(t);
+					statusCode = Integer.parseInt(res);
+				}else if(path.equals("/api/v1/addMovie") && method.equals("PUT")) {
     				res = handleAddMovie(t);
     				statusCode = Integer.parseInt(res);
     			}else if(path.equals("/api/v1/addRelationship") && method.equals("PUT")){
@@ -243,6 +245,44 @@ public class App
 			return res;
 		}
 
+		private String handleDeleteMovie(HttpExchange t) throws IOException, JSONException{
+			Connection nb = new Connection();
+			String query = t.getRequestURI().getQuery();
+			String movieId = null;
+			String res = "";
+			int statusCode = 0;
+
+			if(query != null){
+				for(String param: query.split("&")){
+					String[] pair = param.split("=");
+					if(pair.length == 2 && pair[0].equals("movieId")){
+						movieId = pair[1];
+						break;
+					}
+				}
+			}
+
+			if(movieId == null){
+				res = "INVALID BODY";
+				statusCode = 400;
+				t.sendResponseHeaders(statusCode, res.getBytes().length);
+				OutputStream os = t.getResponseBody();
+				os.write(res.getBytes());
+				os.close();
+				return null;
+			}
+
+			if(movieId.isEmpty() || !movieId.matches("^nm\\d+$")){
+				return "404";
+			}
+
+			if(!nb.movieExists(movieId)){
+				return "404";
+			}
+
+			res = nb.deleteMovie(movieId);
+			return res;
+		}
 		private String handleGetActor(HttpExchange t) throws IOException, JSONException {
 			Connection nb = new Connection();
     		String query = t.getRequestURI().getQuery();
