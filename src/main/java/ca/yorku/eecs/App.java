@@ -68,13 +68,16 @@ public class App
     			if(path.equals("/api/v1/addActor") && method.equals("PUT")) {
     				res = handleAddActor(t);
     				statusCode = Integer.parseInt(res);
-    			}else if(path.equals("/api/v1/deleteMovie") && method.equals("DELETE")){
-					res = handleDeleteMovie(t);
+    			}else if(path.equals("/api/v1/deleteActor") && method.equals("DELETE")){
+					res = handleDeleteActor(t);
 					statusCode = Integer.parseInt(res);
 				}else if(path.equals("/api/v1/addMovie") && method.equals("PUT")) {
     				res = handleAddMovie(t);
     				statusCode = Integer.parseInt(res);
-    			}else if(path.equals("/api/v1/addRelationship") && method.equals("PUT")){
+    			}else if(path.equals("/api/v1/deleteMovie") && method.equals("DELETE")){
+					res = handleDeleteMovie(t);
+					statusCode = Integer.parseInt(res);
+				}else if(path.equals("/api/v1/addRelationship") && method.equals("PUT")){
 					res = handleAddRelationship(t);
 					statusCode = Integer.parseInt(res);
 				}else if(path.equals("/api/v1/getActor") && method.equals("GET")){
@@ -273,16 +276,59 @@ public class App
 			}
 
 			if(movieId.isEmpty() || !movieId.matches("^nm\\d+$")){
+				System.out.println("IS EMPTY");
 				return "404";
 			}
 
 			if(!nb.movieExists(movieId)){
+				System.out.println("DOESNT EXIST");
 				return "404";
 			}
 
 			res = nb.deleteMovie(movieId);
+			System.out.println("ENTERS HERE");
 			return res;
 		}
+
+		private String handleDeleteActor(HttpExchange t) throws IOException, JSONException{
+			Connection nb = new Connection();
+			String query = t.getRequestURI().getQuery();
+			String actorId = null;
+			String res = "";
+			int statusCode = 0;
+
+			if(query != null){
+				for(String param: query.split("&")){
+					String[] pair = param.split("=");
+					if(pair.length == 2 && pair[0].equals("actorId")){
+						actorId = pair[1];
+						break;
+					}
+				}
+			}
+
+			if(actorId == null){
+				res = "INVALID BODY";
+				statusCode = 400;
+				t.sendResponseHeaders(statusCode, res.getBytes().length);
+				OutputStream os = t.getResponseBody();
+				os.write(res.getBytes());
+				os.close();
+				return null;
+			}
+
+			if(actorId.isEmpty() || !actorId.matches("^nm\\d+$")){
+				return "404";
+			}
+
+			if(!nb.actorExists(actorId)){
+				return "404";
+			}
+
+			res = nb.deleteActor(actorId);
+			return res;
+		}
+
 		private String handleGetActor(HttpExchange t) throws IOException, JSONException {
 			Connection nb = new Connection();
     		String query = t.getRequestURI().getQuery();

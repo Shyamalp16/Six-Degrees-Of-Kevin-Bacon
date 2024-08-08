@@ -120,6 +120,41 @@ public class Connection {
 		}
 	}
 
+	public String deleteActor(String actorId){
+		// final String remRel = "MATCH (a:actor {id: \"" + actorId + "\"})<-[r:ACTED_IN]-() DELETE r";
+		final String remRel = "MATCH (a:actor {id: \"" + actorId + "\"})-[r:ACTED_IN]->() RETURN r";
+		final String checkStatement = "MATCH (a:actor {id: \"" + actorId +"\"}) RETURN COUNT(a) > 0 as exists";
+		final String deleteStatement = "MATCH (a:actor {id: \"" + actorId +"\"}) DELETE a";	
+
+		try(Session session = driver.session()){
+//			CHECK IF IT EXISTS
+			boolean actorExists = session.readTransaction(tx -> {
+				StatementResult result = tx.run(checkStatement, parameters("id", actorId));
+				return result.single().get("exists").asBoolean();
+			});
+			
+//			IF IT DOES NOT, THROW ERROR AND RETURN 404
+			if(!actorExists) {
+				System.out.println("Actor with ID " + actorId + " Doesnt Exist.");
+				return "400";
+			}else {
+				// CHECK IF THERE ARE ANY RELATIONSHIPS, IF YES REMOVE THEM FIRST
+				try(Session s1 = driver.session()){
+					System.out.println("ENTERS");
+					s1.writeTransaction(tx -> tx.run(remRel, parameters("id", actorId)));
+				}
+//				IF YES, OPEN A NEW SESSION AND DELETEIT
+				try (Session s = driver.session()){
+					s.writeTransaction(tx -> tx.run(deleteStatement, parameters("id", actorId)));
+				}
+				return "200";
+			}			
+		}catch (Neo4jException e) {
+			System.err.println("Error Deleting Actor: " + e.getMessage());
+			throw new RuntimeException("Failed to Delete Actor", e);
+		}
+	}
+
 
 	public boolean actorExists(String actorId) {
 	    try (Session session = driver.session()) {

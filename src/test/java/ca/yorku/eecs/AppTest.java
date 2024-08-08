@@ -50,16 +50,24 @@ public class AppTest extends TestCase
             con.setRequestProperty("Content-Type", "application/json; utf-8");
             con.setRequestProperty("Accept", "application/json");
 
-            String jsonInputString = "{\"name\": \"John Doe\", \"actorId\": \"nm101011011\"}";
+            String jsonInputString = "{\"name\": \"John Doe\", \"actorId\": \"nm6767\"}";
             System.out.println(jsonInputString);
             try(OutputStream os = con.getOutputStream()){
                 byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
                 os.write(input, 0, input.length);
             }
 
-            int code = con.getResponseCode();
-            System.out.println("Add Actor Pass gave " + code);
-            assertEquals(200, code);
+            int codeCon = con.getResponseCode();
+            System.out.println("Add Actor Pass gave " + codeCon);
+
+            URL urlDel = new URL("http://localhost:8080/api/v1/deleteActor?actorId=nm6767");
+            HttpURLConnection conDel = (HttpURLConnection) urlDel.openConnection();
+            conDel.setRequestMethod("DELETE");
+            conDel.setRequestProperty("Accept", "application/json");
+            int code = conDel.getResponseCode();
+            System.out.println("Deleted Actor " + code);
+
+            assertEquals(200, codeCon);
 
         }catch(IOException e){
             // e.printStackTrace();
