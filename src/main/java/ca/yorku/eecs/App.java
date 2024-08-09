@@ -7,6 +7,9 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 import com.sun.net.httpserver.HttpServer;
@@ -100,8 +103,7 @@ public class App
 					if(res == "404"){
 						statusCode = Integer.parseInt(res);
 					}
-				}
-				else if(path.equals("/api/v1/computeBaconNumber") && method.equals("GET")) {
+				}else if(path.equals("/api/v1/computeBaconNumber") && method.equals("GET")) {
     				res = computeBaconNumber(t);
     				if(res == "404"){
 						statusCode = Integer.parseInt(res);
@@ -111,8 +113,12 @@ public class App
     				if(res == "404"){
 						statusCode = Integer.parseInt(res);
 					}
-				}
-				else {
+				}else if(path.equals("/api/v1/mostFrequent") && method.equals("GET")){
+					res = handleMostFreq(t);
+					if(res == "404"){
+						statusCode = Integer.parseInt(res);
+					}
+				}else {
     				res = "Invalid Path or Method";
     				t.sendResponseHeaders(404, res.getBytes().length);
     				OutputStream os = t.getResponseBody();
@@ -492,7 +498,12 @@ public class App
 			if(actorId.isEmpty() || !actorId.matches("^nm\\d+$")) {
 				return "404";
 			}
-		
+
+			if(!nb.actorExists(actorId)){
+				System.out.println("APPARTENLY ITS DOESNT EXIST?");
+				return "404";
+			}
+			
 			int baconNumber = nb.getBaconNumber(actorId);
 			JSONObject resObj = new JSONObject();
 			resObj.put("baconNumber", baconNumber);
@@ -519,6 +530,29 @@ public class App
 
 			return res;
 
+		}
+	
+		private String handleMostFreq(HttpExchange t) throws IOException, JSONException {
+			Connection nb = new Connection();
+			Map<String, Integer> pairFreq = nb.getActorPairFreq();
+			List<String> mostFreqActors = new ArrayList<>();
+			
+			if(pairFreq.isEmpty()){
+				System.out.println("EMPTY");
+				return "404";
+				// return mostFreqActors;
+			}
+
+			int maxFreq = Collections.max(pairFreq.values());
+			for(Map.Entry<String, Integer> e: pairFreq.entrySet()){
+				if(e.getValue() == maxFreq){
+					String[] actors = e.getKey().split("-");
+					mostFreqActors.add(actors[0]);
+					mostFreqActors.add(actors[1]);
+				}
+			}
+			System.out.println(mostFreqActors);
+			return "200";
 		}
 	}
 }
