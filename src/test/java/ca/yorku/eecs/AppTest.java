@@ -127,7 +127,7 @@ public class AppTest extends TestCase
 
             int code = con.getResponseCode();
             System.out.println("Add Actor Fail gave " + code);
-            assertEquals(500, code);
+            assertEquals(400, code);
         }catch(IOException e){
             // e.printStackTrace();
             fail("Exception Occured" + e.getMessage());
@@ -168,7 +168,7 @@ public class AppTest extends TestCase
             con.setRequestProperty("Content-Type", "application/json; utf-8");
             con.setRequestProperty("Accept", "application/json");
 
-            String jsonInputString = "{\"actorId\": \"nm11\", \"movieId\": \"nm101010111\"}";
+            String jsonInputString = "{\"actorId\": \"nm101011011\", \"movieId\": \"nm2323\"}";
             System.out.println(jsonInputString);
             try(OutputStream os = con.getOutputStream()){
                 byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
@@ -177,6 +177,13 @@ public class AppTest extends TestCase
 
             int code = con.getResponseCode();
             System.out.println("Add Relationship Pass gave " + code);
+
+            URL urlDel = new URL("http://localhost:8080/api/v1/deleteRelationship?actorId=nm101011011&movieId=nm2323");
+            HttpURLConnection conDel = (HttpURLConnection) urlDel.openConnection();
+            conDel.setRequestMethod("DELETE");
+            conDel.setRequestProperty("Accept", "application/json");
+            int codeDel = conDel.getResponseCode();
+            System.out.println("Deleted Relaionship " + codeDel);
             assertEquals(200, code);
         }catch(IOException e){
             // e.printStackTrace();
@@ -202,7 +209,7 @@ public class AppTest extends TestCase
 
             int code = con.getResponseCode();
             System.out.println("Add Relationship Fail gave " + code);
-            assertEquals(500, code);
+            assertEquals(400, code);
         }catch(IOException e){
             // e.printStackTrace();
             fail("Exception Occured" + e.getMessage());

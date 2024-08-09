@@ -80,6 +80,9 @@ public class App
 				}else if(path.equals("/api/v1/addRelationship") && method.equals("PUT")){
 					res = handleAddRelationship(t);
 					statusCode = Integer.parseInt(res);
+				}else if(path.equals("/api/v1/deleteRelationship") && method.equals("DELETE")){
+					res = handleDeleteRelationship(t);
+					statusCode = Integer.parseInt(res);
 				}else if(path.equals("/api/v1/getActor") && method.equals("GET")){
 					res = handleGetActor(t);
 					if(res == "404"){
@@ -177,7 +180,7 @@ public class App
 
     	    if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("^nm\\d+$") || !movieId.matches("^nm\\d+$")) {
     	        responseCode = "404";
-				      return responseCode;
+				return responseCode;
     	    }
 
     	    // Check if the actor and movie exist in the database
@@ -196,6 +199,51 @@ public class App
 			return responseCode;
     	}
 
+		private String handleDeleteRelationship(HttpExchange t) throws JSONException, IOException {
+			Connection nb = new Connection();
+			String query = t.getRequestURI().getQuery();
+			String movieId = null;
+			String actorId = null;
+			String res = "";
+			int statusCode = 0;
+
+			if(query != null){
+				for(String param: query.split("&")){
+					String[] pair = param.split("=");
+					if(pair.length == 2 && pair[0].equals("actorId")){
+						actorId = pair[1];
+					}else if(pair.length == 2 && pair[0].equals("movieId")){
+						movieId = pair[1];
+						break;
+					}
+				}
+			}
+
+			if(actorId == null || movieId == null){
+				res = "Invalid Body";
+				statusCode = 400;
+				t.sendResponseHeaders(statusCode, res.getBytes().length);
+				OutputStream os = t.getResponseBody();
+				os.write(res.getBytes());
+				os.close();
+				return null;
+			}
+
+			if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("^nm\\d+$") || !movieId.matches("^nm\\d+$")) {
+				return "404";
+			}
+
+			if (!nb.actorExists(actorId) || !nb.movieExists(movieId)) {
+				return "404";	
+			}
+
+			if(!nb.hasRelationship(actorId, movieId)){
+				return "404";
+			}
+
+			res = nb.deleteRelationship(actorId, movieId);
+			return res;
+		}
 		private String handleHasRelationship(HttpExchange t) throws IOException, JSONException {
 			Connection nb = new Connection();
     	    String query = t.getRequestURI().getQuery();

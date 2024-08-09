@@ -187,6 +187,17 @@ public class Connection {
 		}
 	}
 
+	public String deleteRelationship(String actorId, String movieId){
+		try(Session session = driver.session()){
+			String checkQuery = "MATCH (a:actor {id: \"" + actorId + "\"})-[r:ACTED_IN]->(m:movie {id: \"" + movieId + "\"}) DELETE r";
+			session.run(checkQuery, Values.parameters("actorId", actorId, "movieId", movieId));
+		}catch (Exception e){
+			e.printStackTrace();
+	        return null;
+		}
+		return "200";
+	}
+
 	public boolean addRelationship(String actorId, String movieId) {
 	    try (Session session = driver.session()) {
 	        // Check if the relationship already exists
