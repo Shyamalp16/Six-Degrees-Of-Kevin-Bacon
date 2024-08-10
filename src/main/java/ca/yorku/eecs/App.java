@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpExchange;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -96,7 +98,6 @@ public class App
 					if(res == "404"){
 						statusCode = Integer.parseInt(res);
 					}
-					System.out.println(statusCode);
 				}else if(path.equals("/api/v1/hasRelationship") && method.equals("GET")){
 					res = handleHasRelationship(t);
 					// AT THIS POINT ONLY IF NO MOVIE/ACTOR EXISTS, WE WILL GET A 404 OTHERWISE IT WILL BE 200 BECAUSE WE ARE CHECKING FOR 400 OUTSIDE OF THE FUNCTION SO NO NEED TO PARSE ALL THE CODES 200 RESPONSE WILL BE DIFFERENT 
@@ -115,6 +116,11 @@ public class App
 					}
 				}else if(path.equals("/api/v1/mostFrequent") && method.equals("GET")){
 					res = handleMostFreq(t);
+					if(res == "404"){
+						statusCode = Integer.parseInt(res);
+					}
+				}else if(path.equals("/api/v1/shortestPath") && method.equals("GET")){
+					res = handleShortestPath(t);
 					if(res == "404"){
 						statusCode = Integer.parseInt(res);
 					}
@@ -330,17 +336,14 @@ public class App
 			}
 
 			if(movieId.isEmpty() || !movieId.matches("^nm\\d+$")){
-				System.out.println("IS EMPTY");
 				return "404";
 			}
 
 			if(!nb.movieExists(movieId)){
-				System.out.println("DOESNT EXIST");
 				return "404";
 			}
 
 			res = nb.deleteMovie(movieId);
-			System.out.println("ENTERS HERE");
 			return res;
 		}
 
@@ -412,12 +415,10 @@ public class App
 
 
 			if(actorId.isEmpty() || !actorId.matches("^nm\\d+$")) {
-				System.out.println("APPARTENLY ITS EMPTY?");
 				return "404";
 			}
 
 			if(!nb.actorExists(actorId)){
-				System.out.println("APPARTENLY ITS DOESNT EXIST?");
 				return "404";
 			}
 
@@ -431,7 +432,6 @@ public class App
 
 			JSONObject resObj = new JSONObject(resMap);
 			res = resObj.toString();
-			System.out.println(res);
 			return res;
 		}
 
@@ -462,15 +462,12 @@ public class App
                 return null;
 			}
 
-			System.out.println(movieId);
 
 			if(movieId.isEmpty() || !movieId.matches("^nm\\d+$")) {
-				System.out.println("APPARENTLY ITS EMPTY");
 				return "404";
 			}
 
 			if(!nb.movieExists(movieId)){
-				System.out.println("MOvie doesnt exist");
 				return "404";
 			}
 
@@ -484,7 +481,6 @@ public class App
 
 			JSONObject resObj = new JSONObject(resMap);
 			res = resObj.toString();
-			System.out.println(res);
 
 			return res;
 		}
@@ -500,7 +496,6 @@ public class App
 			}
 
 			if(!nb.actorExists(actorId)){
-				System.out.println("APPARTENLY ITS DOESNT EXIST?");
 				return "404";
 			}
 			
@@ -508,7 +503,6 @@ public class App
 			JSONObject resObj = new JSONObject();
 			resObj.put("baconNumber", baconNumber);
 			res = resObj.toString();
-			System.out.println(res);
 
 			return res;
 		}
@@ -526,33 +520,88 @@ public class App
 			JSONObject resObj = new JSONObject();
 			resObj.put("baconPath", baconPath);
 			res = resObj.toString();
-			System.out.println(res);
 
 			return res;
 
 		}
-	
+
 		private String handleMostFreq(HttpExchange t) throws IOException, JSONException {
 			Connection nb = new Connection();
-			Map<String, Integer> pairFreq = nb.getActorPairFreq();
-			List<String> mostFreqActors = new ArrayList<>();
+			List<List<String>> actorPairs = nb.getActorPairFreq();
+			List<List<String>> mostFreqActors = new ArrayList<>();
+			String res = "";
 			
-			if(pairFreq.isEmpty()){
-				System.out.println("EMPTY");
+			if(actorPairs.isEmpty()){
 				return "404";
-				// return mostFreqActors;
 			}
 
-			int maxFreq = Collections.max(pairFreq.values());
-			for(Map.Entry<String, Integer> e: pairFreq.entrySet()){
-				if(e.getValue() == maxFreq){
-					String[] actors = e.getKey().split("-");
-					mostFreqActors.add(actors[0]);
-					mostFreqActors.add(actors[1]);
+			Map<List<String>, Integer> freqMap = new HashMap<>();
+			for(List<String> pair: actorPairs){
+				freqMap.put(pair, freqMap.getOrDefault(pair, 0)+ 1);
+			}
+
+			int maxFreq = Collections.max(freqMap.values());
+
+			for (Map.Entry<List<String>, Integer> entry : freqMap.entrySet()) {
+				if (entry.getValue() == maxFreq) {
+					mostFreqActors.add(entry.getKey());
 				}
 			}
-			System.out.println(mostFreqActors);
-			return "200";
+
+			JSONArray jsonArray = new JSONArray();
+   			 for (List<String> pair : mostFreqActors) {
+        		JSONArray jsonPair = new JSONArray();
+        		for (String actorId : pair) {
+            		jsonPair.put(actorId);
+        		}
+        	jsonArray.put(jsonPair);
+    		}	
+
+			res = jsonArray.toString();
+			return res;
 		}
+
+		private String handleShortestPath(HttpExchange t) throws IOException, JSONException {
+			Connection nb = new Connection();
+			String query = t.getRequestURI().getQuery();
+			String actor1Id = null;
+			String actor2Id = null;
+			int statusCode;
+			String res = "";
+
+			if(query != null){
+				for(String param: query.split("&")){
+					String[] pair = param.split("=");
+					if(pair.length == 2 && pair[0].equals("actorId1")){
+						actor1Id = pair[1];
+					}else if(pair.length == 2 && pair[0].equals("actorId2")){
+						actor2Id = pair[1];
+						break;
+					}
+				}
+			}
+
+			if (actor1Id.isEmpty() || actor2Id.isEmpty() || !actor1Id.matches("^nm\\d+$") || !actor2Id.matches("^nm\\d+$")) {
+    	        return "404";
+    	    }
+
+			if(!nb.actorExists(actor1Id) || !nb.actorExists(actor2Id)){
+				return "404";
+			}
+
+			List<String> path = nb.shortestPath(actor1Id, actor2Id);
+			if(path == null || path.isEmpty()) {
+				return "404";
+			}
+
+			JSONArray jsonPath = new JSONArray();
+			for(String nodeId : path){
+				jsonPath.put(nodeId);
+			}
+
+			res = jsonPath.toString();
+			return res;
+		}
+
 	}
 }

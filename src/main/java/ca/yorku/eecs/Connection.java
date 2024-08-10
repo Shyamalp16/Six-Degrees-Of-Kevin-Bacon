@@ -12,6 +12,7 @@ import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.exceptions.Neo4jException;
@@ -313,23 +314,70 @@ public class Connection {
 		}
 	}
 
-	public Map<String, Integer> getActorPairFreq() {
-		Map<String, Integer> pairFreq = new HashMap<>();
+	// public Map<String, Integer> getActorPairFreq() {
+	// 	Map<String, Integer> pairFreq = new HashMap<>();
 
-		try(Session session = driver.session()){
-			StatementResult result = session.run("MATCH (a1:actor)-[:ACTED_IN]->(m:movie)<-[:ACTED_IN]-(a2:actor) " + "WHERE id(a1) < id(a2) " + "RETURN a1.id AS actor1, a2.id AS actor2, count(m) AS movies_together");
+	// 	try(Session session = driver.session()){
+	// 		StatementResult result = session.run("MATCH (a1:actor)-[:ACTED_IN]->(m:movie)<-[:ACTED_IN]-(a2:actor) " + "WHERE id(a1) < id(a2) " + "RETURN [a1.id, a2.id] AS actor_pair, count(m) AS movies_together");
 		
-			while(result.hasNext()){
+	// 		while(result.hasNext()){
+	// 			Record record = result.next();
+	// 			String actor1 = record.get("actor1").asString();
+	// 			String actor2 = record.get("actor2").asString();
+	// 			int count = record.get("movies_together").asInt();
+	// 			String pairKey = actor1 + "-" + actor2;
+	// 			pairFreq.put(pairKey, count);
+	// 		}
+	// 	}
+
+	// 	return pairFreq;
+	// }
+
+	public List<List<String>> getActorPairFreq() {
+    List<List<String>> actorPairs = new ArrayList<>();
+
+    try (Session session = driver.session()) {
+        StatementResult result = session.run("MATCH (a1:actor)-[:ACTED_IN]->(m:movie)<-[:ACTED_IN]-(a2:actor) " +
+                                             "WHERE id(a1) < id(a2) " +
+                                             "RETURN [a1.id, a2.id] AS actor_pair, count(m) AS movies_together " + 
+											 "LIMIT 1");
+
+        while (result.hasNext()) {
+            Record record = result.next();
+            List<String> actorPair = record.get("actor_pair").asList(Value::asString);
+            actorPairs.add(actorPair);
+        }
+    }
+
+    return actorPairs;
+}
+
+
+	public List<String> shortestPath(String actor1, String actor2){
+		List<String> path = new ArrayList<>();
+		try(Session session = driver.session()){
+			String query =  "MATCH (a:actor {id: $actor1}), (b:actor {id: $actor2}), " +
+               				"p = shortestPath((a)-[*]-(b)) " +
+               				"RETURN [n in nodes(p) | n.id] AS path";
+
+			StatementResult result = session.run(query, Values.parameters("actor1", actor1, "actor2", actor2));
+
+			if(result.hasNext()){
 				Record record = result.next();
-				String actor1 = record.get("actor1").asString();
-				String actor2 = record.get("actor2").asString();
-				int count = record.get("movies_together").asInt();
-				String pairKey = actor1 + "-" + actor2;
-				pairFreq.put(pairKey, count);
+				List<Object> pathObjects = record.get("path").asList();
+				for(Object o : pathObjects){
+					if(o instanceof String){
+						path.add((String) o);
+					}else{
+						System.out.println("Unexpected type in path: " + o.getClass().getName());
+					}
+				}
 			}
+		}catch(Exception e){
+			e.printStackTrace();
 		}
 
-		return pairFreq;
+		return path;
 	}
 }
 

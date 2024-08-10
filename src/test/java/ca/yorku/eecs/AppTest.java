@@ -396,7 +396,7 @@ public class AppTest extends TestCase
         System.out.println("Get Bacon Number gave: " + code);
         assertEquals(404, code);        
         }catch(Exception e){
-            fail("Exception Occured: " + e.getMessage());
+            fail("Exception Occured: " + e);
         }
         
     }
