@@ -121,6 +121,7 @@ public class Connection {
 			throw new RuntimeException("Failed to Delete Movie", e);
 		}
 	}
+	
 
 	public String deleteActor(String actorId){
 		// final String remRel = "MATCH (a:actor {id: \"" + actorId + "\"})<-[r:ACTED_IN]-() DELETE r";
