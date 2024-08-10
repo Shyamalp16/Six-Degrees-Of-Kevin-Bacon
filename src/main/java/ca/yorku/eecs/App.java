@@ -43,7 +43,7 @@ public class App
     		String body = new BufferedReader(new InputStreamReader(t.getRequestBody(), StandardCharsets.UTF_8))
                     .lines()
                     .collect(Collectors.joining("\n"));
-            System.out.println("Request Body: " + body);
+            // System.out.println("Request Body: " + body);
             
 //           PARSE JSON OBJECT
             JSONObject jsonObject;

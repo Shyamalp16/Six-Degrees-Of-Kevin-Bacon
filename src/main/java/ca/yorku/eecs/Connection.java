@@ -108,7 +108,6 @@ public class Connection {
 			}else {
 				// CHECK IF THERE ARE ANY RELATIONSHIPS, IF YES REMOVE THEM FIRST
 				try(Session s1 = driver.session()){
-					System.out.println("ENTERS");
 					s1.writeTransaction(tx -> tx.run(remRel, parameters("id", movieId)));
 				}
 //				IF YES, OPEN A NEW SESSION AND DELETEIT
@@ -143,7 +142,6 @@ public class Connection {
 			}else {
 				// CHECK IF THERE ARE ANY RELATIONSHIPS, IF YES REMOVE THEM FIRST
 				try(Session s1 = driver.session()){
-					System.out.println("ENTERS");
 					s1.writeTransaction(tx -> tx.run(remRel, parameters("id", actorId)));
 				}
 //				IF YES, OPEN A NEW SESSION AND DELETEIT
