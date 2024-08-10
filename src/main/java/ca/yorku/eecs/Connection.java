@@ -314,25 +314,6 @@ public class Connection {
 		}
 	}
 
-	// public Map<String, Integer> getActorPairFreq() {
-	// 	Map<String, Integer> pairFreq = new HashMap<>();
-
-	// 	try(Session session = driver.session()){
-	// 		StatementResult result = session.run("MATCH (a1:actor)-[:ACTED_IN]->(m:movie)<-[:ACTED_IN]-(a2:actor) " + "WHERE id(a1) < id(a2) " + "RETURN [a1.id, a2.id] AS actor_pair, count(m) AS movies_together");
-		
-	// 		while(result.hasNext()){
-	// 			Record record = result.next();
-	// 			String actor1 = record.get("actor1").asString();
-	// 			String actor2 = record.get("actor2").asString();
-	// 			int count = record.get("movies_together").asInt();
-	// 			String pairKey = actor1 + "-" + actor2;
-	// 			pairFreq.put(pairKey, count);
-	// 		}
-	// 	}
-
-	// 	return pairFreq;
-	// }
-
 	public List<List<String>> getActorPairFreq() {
     List<List<String>> actorPairs = new ArrayList<>();
 
