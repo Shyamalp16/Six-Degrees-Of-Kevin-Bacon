@@ -349,6 +349,54 @@ public class AppTest extends TestCase
         }   
     }
 
+    public void testShortestPathPass(){
+        Connection nb = new Connection();
+        
+        nb.insertActor("Test Actor","nm900");
+        nb.insertMovie("TEST MOVIE", "nm800");
+        nb.addRelationship("nm900", "nm800");
+        nb.insertActor("Test Actor","nm901");
+        nb.addRelationship("nm901", "nm800");
+
+        try{
+            URL url = new URL("http://localhost:8080/api/v1/shortestPath?actorId1=nm900&actorId2=nm901");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept", "application/json");
+            int code = con.getResponseCode();
+            assertEquals(200, code);
+
+            nb.deleteRelationship("nm900", "nm800");
+            nb.deleteRelationship("nm901", "nm800");
+            nb.deleteActor("nm900");
+            nb.deleteActor("nm901");
+            nb.deleteMovie("nm800");
+        }catch(Exception e){
+            fail("EXCEPTION OCCURRED" + e.getMessage());
+        }
+    }
+
+    public void testShortestPathFail(){
+        Connection nb = new Connection();
+        
+        nb.insertActor("Test Actor","nm900");
+        nb.insertActor("Test Actor","nm901");
+
+        try{
+            URL url = new URL("http://localhost:8080/api/v1/shortestPath?actorId1=nm900&actorId2=nm901");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept", "application/json");
+            int code = con.getResponseCode();
+            assertEquals(404, code);
+
+            nb.deleteActor("nm900");
+            nb.deleteActor("nm901");
+        }catch(Exception e){
+            fail("EXCEPTION OCCURRED" + e.getMessage());
+        }
+    }
+
     // public void testcomputeBaconNumberPass(){
     //     try{
     //         URL url = new URL("http://localhost:8080/api/v1/addActor");

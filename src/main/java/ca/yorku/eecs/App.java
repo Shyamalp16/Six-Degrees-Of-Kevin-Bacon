@@ -582,15 +582,18 @@ public class App
 			}
 
 			if (actor1Id.isEmpty() || actor2Id.isEmpty() || !actor1Id.matches("^nm\\d+$") || !actor2Id.matches("^nm\\d+$")) {
+				System.out.println("BAD BODY");
     	        return "404";
     	    }
 
 			if(!nb.actorExists(actor1Id) || !nb.actorExists(actor2Id)){
+				System.out.println("DOESNT EXIST");
 				return "404";
 			}
 
 			List<String> path = nb.shortestPath(actor1Id, actor2Id);
 			if(path == null || path.isEmpty()) {
+				System.out.println("NULL");
 				return "404";
 			}
 
