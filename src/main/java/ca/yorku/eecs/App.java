@@ -37,20 +37,15 @@ public class App
     static class MyHandler implements HttpHandler{
     	
     	public JSONObject checkBody(HttpExchange t) throws IOException{
-//    		GET REQUEST BODY IN JSON FORMAT
     		String res = "";
     		int statusCode = 200;
     		String body = new BufferedReader(new InputStreamReader(t.getRequestBody(), StandardCharsets.UTF_8))
                     .lines()
                     .collect(Collectors.joining("\n"));
-            // System.out.println("Request Body: " + body);
-            
-//           PARSE JSON OBJECT
             JSONObject jsonObject;
             try {
             	jsonObject = new JSONObject(body);
 			} catch (JSONException e1) {
-//				if request body is incomplete, send statusCode as response
 				res = "INVALD BODY";
 				statusCode = 400;
                 t.sendResponseHeaders(statusCode, res.getBytes().length);
@@ -72,7 +67,6 @@ public class App
 
 		@Override
     	public void handle(HttpExchange t) throws IOException{
-//    		SETUP VARIABLES
     		String path = t.getRequestURI().getPath();
 			String method = t.getRequestMethod();
     		String res = "";
@@ -136,11 +130,9 @@ public class App
             String id = jsonObject.getString("actorId");
             String responseCode;
             
-//          IF INVALID REQUEST BODY 
             if(name.isEmpty() || id.isEmpty() || !id.matches("^nm\\d+$")) {
             	return "400";
             }
-//    		ADD THE IF ALREADY IN DATABASE, RETURN 400
 
 			if(nb.actorExists(id)){
 				return "400";
@@ -156,11 +148,10 @@ public class App
             String id = jsonObject.getString("movieId");
             String responseCode;
             
-//          IF INVALID REQUEST BODY 
             if(name.isEmpty() || id.isEmpty() || !id.matches("^nm\\d+$")) {
             	return "400";
             }
-//    		ADD THE IF ALREADY IN DATABASE, RETURN 400
+
 			if(nb.movieExists(id)){
 				return "400";
 			}
@@ -181,17 +172,15 @@ public class App
 				return responseCode;
     	    }
 
-    	    // Check if the actor and movie exist in the database
     	    if (!nb.actorExists(actorId) || !nb.movieExists(movieId)) {
     	        responseCode = "404";
 				return responseCode;
     	    }
 
-    	    // Add the relationship and check for uniqueness
     	    boolean added = nb.addRelationship(actorId, movieId);
     	    if (!added) {
     	        responseCode = "400";
-				return responseCode; // If the relationship already exists
+				return responseCode;
     	    }
     	    responseCode = "200";
 			return responseCode;
@@ -384,6 +373,7 @@ public class App
 
 			JSONObject resObj = new JSONObject(resMap);
 			res = resObj.toString();
+			// System.out.println(res);
 			returnResponse(t, 200,res);
 		}
 
@@ -530,9 +520,9 @@ public class App
 			res = resObj.toString();
 			System.out.println(res.split(":")[1]);
 			if(res.split(":")[1].equals("[]}")){
-				return "404";
+				returnResponse(t, 404, "No Path Found");
 			}
-
+			System.out.println(res);
 			return res;
 		}
 

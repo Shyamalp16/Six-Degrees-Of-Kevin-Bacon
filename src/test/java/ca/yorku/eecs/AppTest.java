@@ -43,6 +43,7 @@ public class AppTest extends TestCase
 
     public void testaddActorPass(){
         try{
+            Connection nb = new Connection();
             URL url = new URL("http://localhost:8080/api/v1/addActor");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("PUT");
@@ -58,20 +59,17 @@ public class AppTest extends TestCase
 
             int codeCon = con.getResponseCode();
 
-            URL urlDel = new URL("http://localhost:8080/api/v1/deleteActor?actorId=nm6767");
-            HttpURLConnection conDel = (HttpURLConnection) urlDel.openConnection();
-            conDel.setRequestMethod("DELETE");
-            conDel.setRequestProperty("Accept", "application/json");
+            nb.deleteActor("nm6767");
             assertEquals(200, codeCon);
 
         }catch(IOException e){
-            // e.printStackTrace();
             fail("Exception Occured" + e.getMessage());
         }
     }
 
     public void testaddMoviePass(){
         try{
+            Connection nb = new Connection();
             URL url = new URL("http://localhost:8080/api/v1/addMovie");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             
@@ -88,14 +86,10 @@ public class AppTest extends TestCase
 
             int codeCon = con.getResponseCode();
 
-            URL urlDel = new URL("http://localhost:8080/api/v1/deleteMovie?movieId=nm1212");
-            HttpURLConnection conDel = (HttpURLConnection) urlDel.openConnection();
-            conDel.setRequestMethod("DELETE");
-            conDel.setRequestProperty("Accept", "application/json");
+            nb.deleteMovie("nm1212");
             assertEquals(200, codeCon);
 
         }catch(IOException e){
-            // e.printStackTrace();
             fail("Exception Occured" + e.getMessage());
         }
     }
@@ -118,7 +112,6 @@ public class AppTest extends TestCase
             int code = con.getResponseCode();
             assertEquals(400, code);
         }catch(IOException e){
-            // e.printStackTrace();
             fail("Exception Occured" + e.getMessage());
         }
     }
@@ -141,7 +134,6 @@ public class AppTest extends TestCase
             int code = con.getResponseCode();
             assertEquals(500, code);
         }catch(IOException e){
-            // e.printStackTrace();
             fail("Exception Occured" + e.getMessage());
         }
     }
@@ -187,7 +179,6 @@ public class AppTest extends TestCase
 
             assertEquals(200, code);
         }catch(IOException e){
-            // e.printStackTrace();
             fail("Exception Occured" + e.getMessage());
         }
     }
@@ -210,7 +201,6 @@ public class AppTest extends TestCase
             int code = con.getResponseCode();
             assertEquals(404, code);
         }catch(IOException e){
-            // e.printStackTrace();
             fail("Exception Occured" + e.getMessage());
         }
     }
@@ -218,7 +208,7 @@ public class AppTest extends TestCase
     public void testgetActorPass() {
         try {
             Connection nb = new Connection();
-            if(!nb.actorExists("nmt100")){
+            if(!nb.actorExists("nm100")){
                 String r = nb.insertActor("Test Actor", "nm100");
             }
             URL url = new URL("http://localhost:8080/api/v1/getActor?actorId=nm100");
@@ -236,7 +226,6 @@ public class AppTest extends TestCase
 
     public void testgetActorFail() {
         try {
-            // Append the actorId as a query parameter
             Connection nb = new Connection();
             if(nb.actorExists("nm100")){
                 String r = nb.deleteActor("nm100");
@@ -255,7 +244,6 @@ public class AppTest extends TestCase
     
     public void testgetMoviePass() {
         try {
-            // Append the movieId as a query parameter
             Connection nb = new Connection();
             if(!nb.movieExists("nm101")){
                 String r = nb.insertMovie("Test Actor", "nm101");
@@ -275,7 +263,6 @@ public class AppTest extends TestCase
 
     public void testgetMovieFail() {
         try {
-            // Append the movieId as a query parameter
             Connection nb = new Connection();
             if(nb.movieExists("nm101")){
                 String r = nb.deleteMovie("nm101");
@@ -396,7 +383,6 @@ public class AppTest extends TestCase
 
     public void testGetBaconNumberPass() {
         try {
-            // Adding Kevin Bacon and another actor
             Connection nb = new Connection();
             if (!nb.actorExists("nm0000102")) {
                 nb.insertActor("Kevin Bacon", "nm0000102");
@@ -405,14 +391,12 @@ public class AppTest extends TestCase
                 nb.insertActor("Test Actor", "nm9009009");
             }
     
-            // Adding a movie and relationships
             if (!nb.movieExists("nm8008008")) {
                 nb.insertMovie("Test Movie", "nm8008008");
             }
             nb.addRelationship("nm0000102", "nm8008008");
             nb.addRelationship("nm9009009", "nm8008008");
     
-            // Testing the Bacon Number computation
             URL url = new URL("http://localhost:8080/api/v1/computeBaconNumber?actorId=nm9009009");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
@@ -421,7 +405,6 @@ public class AppTest extends TestCase
             int code = con.getResponseCode();
             assertEquals(200, code);
     
-            // Cleanup
             nb.deleteRelationship("nm0000102", "nm8008008");
             nb.deleteRelationship("nm9009009", "nm8008008");
             nb.deleteActor("nm9009009");
@@ -434,13 +417,11 @@ public class AppTest extends TestCase
 
     public void testGetBaconNumberFail() {
         try {
-            // Ensure that the actor does not exist
             Connection nb = new Connection();
             if (nb.actorExists("nm9999999")) {
                 nb.deleteActor("nm9999999");
             }
     
-            // Testing the Bacon Number computation for a non-existent actor
             URL url = new URL("http://localhost:8080/api/v1/computeBaconNumber?actorId=nm9999999");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
@@ -456,7 +437,6 @@ public class AppTest extends TestCase
     
     public void testComputeBaconPathPass() {
         try {
-            // Setup: Add actors, movie, and relationships
             Connection nb = new Connection();
             if (!nb.actorExists("nm0000102")) {
                 nb.insertActor("Kevin Bacon", "nm0000102");
@@ -471,7 +451,6 @@ public class AppTest extends TestCase
             nb.addRelationship("nm0000102", "nm200300400");
             nb.addRelationship("nm313131313", "nm200300400");
     
-            // Test: Compute Bacon Path
             URL url = new URL("http://localhost:8080/api/v1/computeBaconPath?actorId=nm313131313");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
@@ -480,7 +459,6 @@ public class AppTest extends TestCase
             int code = con.getResponseCode();
             assertEquals(200, code);
     
-            // Cleanup
             nb.deleteRelationship("nm0000102", "nm200300400");
             nb.deleteRelationship("nm313131313", "nm200300400");
             nb.deleteActor("nm0000102");
@@ -493,13 +471,11 @@ public class AppTest extends TestCase
 
     public void testComputeBaconPathFail() {
         try {
-            // Ensure that the actor does not exist
             Connection nb = new Connection();
             if (nb.actorExists("nm9999999")) {
                 nb.deleteActor("nm9999999");
             }
     
-            // Test: Compute Bacon Path for a non-existent actor
             URL url = new URL("http://localhost:8080/api/v1/computeBaconPath?actorId=nm9999999");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
@@ -511,5 +487,54 @@ public class AppTest extends TestCase
             fail("Exception Occurred: " + e.getMessage());
         }
     }
+
+    public void testGetActorOverviewPass() {
+        try {
+            Connection nb = new Connection();
+            if (!nb.actorExists("nm0000102")) {
+                nb.insertActor("Kevin Bacon", "nm0000102");
+            }
+            if (!nb.movieExists("nm8008008")) {
+                nb.insertMovie("Test Movie", "nm8008008");
+            }
+            nb.addRelationship("nm0000102", "nm8008008");
+    
+            URL url = new URL("http://localhost:8080/api/v1/getActorOverview?actorId=nm0000102");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept", "application/json");
+    
+            int code = con.getResponseCode();
+            assertEquals(200, code);
+    
+            nb.deleteRelationship("nm0000102", "nm8008008");
+            nb.deleteActor("nm0000102");
+            nb.deleteMovie("nm8008008");
+    
+        } catch (IOException e) {
+            fail("Exception Occurred: " + e.getMessage());
+        }
+    }
+
+    public void testGetActorOverviewFail() {
+        try {
+            Connection nb = new Connection();
+            if (nb.actorExists("nm9999999")) {
+                nb.deleteActor("nm9999999");
+            }
+    
+            URL url = new URL("http://localhost:8080/api/v1/getActorOverview?actorId=nm9999999");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept", "application/json");
+    
+            int code = con.getResponseCode();
+            assertEquals(404, code);
+    
+        } catch (IOException e) {
+            fail("Exception Occurred: " + e.getMessage());
+        }
+    }
+    
 }
 

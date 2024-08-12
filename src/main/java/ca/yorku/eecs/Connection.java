@@ -40,18 +40,15 @@ public class Connection {
 		
 
 		try(Session session = driver.session()){
-//			CHECK IF IT EXISTS
 			boolean actorExists = session.readTransaction(tx -> {
 	            StatementResult result = tx.run(checkStatement, parameters("id", actorId));
 	            return result.single().get("exists").asBoolean();
 	        });
 			
-//			IF IT DOES, THROW ERROR AND RETURN 404
 			if(actorExists) {
 				System.out.println("Actor with ID " + actorId + " already exists.");
 				return "400";
 			}else {
-//				IF NOT, OPEN A NEW SESSION AND PUSH IT
 				try (Session s = driver.session()){
 					s.writeTransaction(tx -> tx.run(statementTemplate, parameters("name", actor, "id", actorId)));
 				}
@@ -66,18 +63,15 @@ public class Connection {
 		
 
 		try(Session session = driver.session()){
-//			CHECK IF IT EXISTS
 			boolean movieExists = session.readTransaction(tx -> {
 	            StatementResult result = tx.run(checkStatement, parameters("id", movieId));
 	            return result.single().get("exists").asBoolean();
 	        });
 			
-//			IF IT DOES, THROW ERROR AND RETURN 404
 			if(movieExists) {
 				System.out.println("Movie with ID " + movieId + " already exists.");
 				return "400";
 			}else {
-//				IF NOT, OPEN A NEW SESSION AND PUSH IT
 				try (Session s = driver.session()){
 					s.writeTransaction(tx -> tx.run(statementTemplate, parameters("name", movie, "id", movieId)));
 				}
@@ -95,22 +89,18 @@ public class Connection {
 		final String deleteStatement = "MATCH (m:movie {id: \"" + movieId +"\"}) DELETE m";	
 
 		try(Session session = driver.session()){
-//			CHECK IF IT EXISTS
 			boolean movieExists = session.readTransaction(tx -> {
 				StatementResult result = tx.run(checkStatement, parameters("id", movieId));
 				return result.single().get("exists").asBoolean();
 			});
 			
-//			IF IT DOES NOT, THROW ERROR AND RETURN 404
 			if(!movieExists) {
 				System.out.println("Movie with ID " + movieId + " Doesnt Exist.");
 				return "400";
 			}else {
-				// CHECK IF THERE ARE ANY RELATIONSHIPS, IF YES REMOVE THEM FIRST
 				try(Session s1 = driver.session()){
 					s1.writeTransaction(tx -> tx.run(remRel, parameters("id", movieId)));
 				}
-//				IF YES, OPEN A NEW SESSION AND DELETEIT
 				try (Session s = driver.session()){
 					s.writeTransaction(tx -> tx.run(deleteStatement, parameters("id", movieId)));
 				}
@@ -124,28 +114,23 @@ public class Connection {
 	
 
 	public String deleteActor(String actorId){
-		// final String remRel = "MATCH (a:actor {id: \"" + actorId + "\"})<-[r:ACTED_IN]-() DELETE r";
 		final String remRel = "MATCH (a:actor {id: \"" + actorId + "\"})-[r:ACTED_IN]->() RETURN r";
 		final String checkStatement = "MATCH (a:actor {id: \"" + actorId +"\"}) RETURN COUNT(a) > 0 as exists";
 		final String deleteStatement = "MATCH (a:actor {id: \"" + actorId +"\"}) DELETE a";	
 
 		try(Session session = driver.session()){
-//			CHECK IF IT EXISTS
 			boolean actorExists = session.readTransaction(tx -> {
 				StatementResult result = tx.run(checkStatement, parameters("id", actorId));
 				return result.single().get("exists").asBoolean();
 			});
 			
-//			IF IT DOES NOT, THROW ERROR AND RETURN 404
 			if(!actorExists) {
 				System.out.println("Actor with ID " + actorId + " Doesnt Exist.");
 				return "400";
 			}else {
-				// CHECK IF THERE ARE ANY RELATIONSHIPS, IF YES REMOVE THEM FIRST
 				try(Session s1 = driver.session()){
 					s1.writeTransaction(tx -> tx.run(remRel, parameters("id", actorId)));
 				}
-//				IF YES, OPEN A NEW SESSION AND DELETEIT
 				try (Session s = driver.session()){
 					s.writeTransaction(tx -> tx.run(deleteStatement, parameters("id", actorId)));
 				}
@@ -183,7 +168,7 @@ public class Connection {
 		try(Session session = driver.session()){
 			String checkQuery = "MATCH (a:actor {id: \"" + actorId + "\"})-[r:ACTED_IN]->(m:movie {id: \"" + movieId + "\"}) RETURN r";
 			if (session.run(checkQuery, Values.parameters("actorId", actorId, "movieId", movieId)).hasNext()) {
-	            return true; // Relationship already exists
+	            return true;
 	        }
 			return false;
 		}
@@ -202,17 +187,15 @@ public class Connection {
 
 	public boolean addRelationship(String actorId, String movieId) {
 	    try (Session session = driver.session()) {
-	        // Check if the relationship already exists
 	        String checkQuery = "MATCH (a:actor {id: \"" + actorId + "\"})-[r:ACTED_IN]->(m:movie {id: \"" + movieId + "\"}) RETURN r";
 	        if (session.run(checkQuery, Values.parameters("actorId", actorId, "movieId", movieId)).hasNext()) {
-	            return false; // Relationship already exists
+	            return false; 
 	        }else{
 				try(Session s = driver.session()){
-					// Create the relationship
 					String createQuery = "MATCH (a:actor {id: \"" + actorId + "\"}), (m:movie {id: \"" + movieId + "\"}) " +
 	                             "CREATE (a)-[:ACTED_IN]->(m)";
 	        		s.run(createQuery, Values.parameters("actorId", actorId, "movieId", movieId));
-					return true; // Relationship successfully created
+					return true;
 				}
 			}
 	    } catch (Exception e) {
@@ -314,9 +297,9 @@ public class Connection {
 	}
 
 	public int getBaconNumber(String actorId){
-			if(actorId.equals("nm0000102"))//If Kevin Bacon Querried return 0
+			if(actorId.equals("nm0000102"))
 				return 0;
-		 try (Session session = driver.session()) { //Compute the path to kevin and devide by 2 in order to not double count
+		 try (Session session = driver.session()) {
             String query = "MATCH p = shortestPath((a1:actor {id: \"" + actorId + "\"})-[*]-(a2:actor {id: 'nm0000102'})) RETURN length(p) / 2 AS degree";
             StatementResult result = session.run(query, Values.parameters("actorId", actorId));
 			
@@ -333,9 +316,9 @@ public class Connection {
 
 	public Object[] getBaconPath(String actorId){
 		
-		if(actorId.equals("nm0000102"))//If Kevin Bacon Querried return 0
+		if(actorId.equals("nm0000102"))
 			return new String[0];
-	 try (Session session = driver.session()) { //Compute the path to kevin and devide by 2 in order to not double count
+	 try (Session session = driver.session()) {
 		String query = "MATCH p = shortestPath((a1:actor {id: \"" + actorId + "\"})-[*]-(a2:actor {id: 'nm0000102'})) RETURN p AS path";
 		StatementResult result = session.run(query, Values.parameters("actorId", actorId));
 		
