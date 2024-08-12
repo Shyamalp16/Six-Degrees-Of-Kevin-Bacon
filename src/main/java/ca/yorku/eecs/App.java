@@ -487,9 +487,30 @@ public class App
 		
 		private String computeBaconNumber(HttpExchange t) throws IOException, JSONException {
 			Connection nb = new Connection();
-			JSONObject jsonObject = checkBody(t);
-            String actorId = jsonObject.getString("actorId");
+			String query = t.getRequestURI().getQuery();
+			String actorId = null;
 			String res = "";
+			int statusCode;
+
+			if(query != null){
+				for(String param: query.split("&")){
+					String[] pair = param.split("=");
+					if(pair.length == 2 && pair[0].equals("actorId")){
+						actorId = pair[1];
+						break;
+					}
+				}
+			}
+
+			if(actorId == null){
+				res = "INVALD BODY";
+				statusCode = 400;
+                t.sendResponseHeaders(statusCode, res.getBytes().length);
+                OutputStream os = t.getResponseBody();
+                os.write(res.getBytes());
+                os.close();
+                return null;
+			}
 			
 			if(actorId.isEmpty() || !actorId.matches("^nm\\d+$")) {
 				return "404";
@@ -509,20 +530,45 @@ public class App
 
 		private String computeBaconPath(HttpExchange t) throws IOException, JSONException {
 			Connection nb = new Connection();
-			JSONObject jsonObject = checkBody(t);
-            String actorId = jsonObject.getString("actorId");
+			String query = t.getRequestURI().getQuery();
+			String actorId = null;
 			String res = "";
+			int statusCode;
+
+			if(query != null){
+				for(String param: query.split("&")){
+					String[] pair = param.split("=");
+					if(pair.length == 2 && pair[0].equals("actorId")){
+						actorId = pair[1];
+						break;
+					}
+				}
+			}
+
+			if(actorId == null){
+				res = "INVALD BODY";
+				statusCode = 400;
+                t.sendResponseHeaders(statusCode, res.getBytes().length);
+                OutputStream os = t.getResponseBody();
+                os.write(res.getBytes());
+                os.close();
+                return null;
+			}
 
 			if(actorId.isEmpty() || !actorId.matches("^nm\\d+$")) {
 				return "404";
 			}
+
 			Object[] baconPath = nb.getBaconPath(actorId);
 			JSONObject resObj = new JSONObject();
 			resObj.put("baconPath", baconPath);
 			res = resObj.toString();
+			System.out.println(res.split(":")[1]);
+			if(res.split(":")[1].equals("[]}")){
+				return "404";
+			}
 
 			return res;
-
 		}
 
 		private String handleMostFreq(HttpExchange t) throws IOException, JSONException {
