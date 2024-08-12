@@ -22,6 +22,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
+// GROUP Q PROJECT PHASE 2
+// PARTICIPENTS:
+// Shyamal Patel:	  219883388
+// Can Arda Eksioglu: 217954751
+// Hojun Jeon:		  218877696
+
 public class App 
 {
     static int PORT = 8080;
