@@ -61,7 +61,15 @@ public class App
 			}
             return jsonObject;
     	}
-    	@Override
+    
+		public void returnResponse(HttpExchange t, int statusCode, String res) throws IOException, JSONException {
+			t.sendResponseHeaders(statusCode, res.getBytes().length);
+			OutputStream os = t.getResponseBody();
+			os.write(res.getBytes());
+			os.close();
+		}
+
+		@Override
     	public void handle(HttpExchange t) throws IOException{
 //    		SETUP VARIABLES
     		String path = t.getRequestURI().getPath();
@@ -124,6 +132,11 @@ public class App
 					if(res == "404"){
 						statusCode = Integer.parseInt(res);
 					}
+				}else if(path.equals("/api/v1/getActorOverview") && method.equals("GET")){
+					handleActorOverview(t);
+					// if(res == "404"){
+					// 	statusCode = Integer.parseInt(res);
+					// }
 				}else {
     				res = "Invalid Path or Method";
     				t.sendResponseHeaders(404, res.getBytes().length);
@@ -435,6 +448,45 @@ public class App
 			return res;
 		}
 
+		private void handleActorOverview(HttpExchange t) throws IOException, JSONException {
+			Connection nb = new Connection();
+			String query = t.getRequestURI().getQuery();
+			String actorId = null;
+			String res = "";
+			int statusCode;
+
+			if(query != null){
+				for(String param: query.split("&")){
+					String[] pair = param.split("=");
+					if(pair.length == 2 && pair[0].equals("actorId")){
+						actorId = pair[1];
+						break;
+					}
+				}
+			}
+
+			if(actorId == null){
+				res = "Invalid Body";
+				statusCode = 400;
+				returnResponse(t, 40, "Invalid Body");
+			}
+
+			if(actorId.isEmpty() || !actorId.matches("^nm\\d+$")){
+				returnResponse(t, 404, "Invalid Body");
+			}
+
+			if(!nb.actorExists(actorId)){
+				returnResponse(t, 404, "Actor Not Found");
+			}
+
+			Map<String, Object> actorOverview = nb.getActorOverview(actorId);
+			JSONObject resObj = new JSONObject(actorOverview);
+			res = resObj.toString();
+			
+			statusCode = 200;
+			returnResponse(t, statusCode, res);
+		}
+
 		private String handleGetMovie(HttpExchange t)  throws IOException, JSONException{
 			Connection nb = new Connection();
     		String query = t.getRequestURI().getQuery();
@@ -481,7 +533,6 @@ public class App
 
 			JSONObject resObj = new JSONObject(resMap);
 			res = resObj.toString();
-
 			return res;
 		}
 		

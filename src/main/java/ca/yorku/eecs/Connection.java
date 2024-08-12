@@ -18,7 +18,8 @@ import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.exceptions.Neo4jException;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
-import java.util.HashMap; // Add this import
+import java.util.HashMap; 
+import java.util.LinkedHashMap; 
 import java.util.Map;
 
 public class Connection {
@@ -256,6 +257,48 @@ public class Connection {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	public Map<String, Object> getActorOverview(String actorId){
+		Map<String, Object> actorOverview = new LinkedHashMap<>();
+		Map<String, String> movie = new LinkedHashMap<>();
+
+		try(Session s1 = driver.session()){
+			String basicInfo = "MATCH (a:actor {id:$actorId}) RETURN a.name as name";
+			StatementResult basicInfoResult = s1.run(basicInfo, Values.parameters("actorId", actorId));
+			if(basicInfoResult.hasNext()){
+				Record record = basicInfoResult.next();
+				actorOverview.put("name", record.get("name").asString());
+			}
+		}try(Session s2 = driver.session()){
+			String moviesQuery = "MATCH (a:actor {id:$actorId})-[:ACTED_IN]->(m:movie) RETURN m.id as movieId, m.name as movieName";
+			StatementResult moviesQueryResult = s2.run(moviesQuery, Values.parameters("actorId", actorId));
+			List<Map<String, String>> moviesList = new ArrayList<>();
+			while(moviesQueryResult.hasNext()){
+				Record record = moviesQueryResult.next();
+				movie.put("movieId", record.get("movieId").asString());
+				movie.put("movieName", record.get("movieName").asString());
+				moviesList.add(movie);
+			}
+			actorOverview.put("movies",moviesList);
+		}try(Session s3 = driver.session()){
+			String collaboratorsQuery = "MATCH (a:actor {id: $actorId})-[:ACTED_IN]->(m:movie)<-[:ACTED_IN]-(coactor:actor) RETURN DISTINCT coactor.id AS coactorId, coactor.name AS coactorName";
+			StatementResult collaboratorsResult = s3.run(collaboratorsQuery, Values.parameters("actorId", actorId));
+			List<Map<String, String>> collaboratorsList = new ArrayList<>();
+			while (collaboratorsResult.hasNext()) {
+                Record record = collaboratorsResult.next();
+                Map<String, String> collaborator = new LinkedHashMap<>();
+                collaborator.put("coactorId", record.get("coactorId").asString());
+                collaborator.put("coactorName", record.get("coactorName").asString());
+                collaboratorsList.add(collaborator);
+            }
+            actorOverview.put("collaborators", collaboratorsList);
+		}catch(Exception e){
+			e.printStackTrace();
+			return null;
+		}
+
+		return actorOverview;
 	}
 
 	public String[] getMovieActors(String movieId){
