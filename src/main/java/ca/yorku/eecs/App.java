@@ -532,6 +532,49 @@ public class App
 			return res;
 		}
 
+	    	private String handleGetRoleActor(HttpExchange t) throws IOException, JSONException {
+		    Connection nb = new Connection();
+		    String query = t.getRequestURI().getQuery();
+		    String actorId = null;
+		    String res = "";
+		    int statusCode;
+		    if (query != null) {
+		        for (String param : query.split("&")) {
+		            String[] pair = param.split("=");
+		            if (pair.length == 2 && pair[0].equals("actorId")) {
+		                actorId = pair[1];
+		                break;
+		            }
+		        }
+		    }
+		    if (actorId == null || actorId.isEmpty() || !actorId.matches("^nm\\d+$")) {
+		        res = "INVALID BODY";
+		        statusCode = 400;
+		        t.sendResponseHeaders(statusCode, res.getBytes().length);
+		        OutputStream os = t.getResponseBody();
+		        os.write(res.getBytes());
+		        os.close();
+		        return null;
+		    }
+		    if (!nb.actorExists(actorId)) {
+		        return "404";
+		    }
+		    // Fetch the roles the actor has played in movies
+		    Map<String, String> rolesMap = nb.getActorRoles(actorId);
+		    if (rolesMap == null || rolesMap.isEmpty()) {
+		        return "404";
+		    }
+		    JSONArray rolesArray = new JSONArray();
+		    for (Map.Entry<String, String> entry : rolesMap.entrySet()) {
+		        JSONObject roleObj = new JSONObject();
+		        roleObj.put("movieId", entry.getKey());
+		        roleObj.put("role", entry.getValue());
+		        rolesArray.put(roleObj);
+		    }
+		    res = rolesArray.toString();
+		    return res;
+		}
+
 		private void handleMostFreq(HttpExchange t) throws IOException, JSONException {
 			Connection nb = new Connection();
 			List<List<String>> actorPairs = nb.getActorPairFreq();
