@@ -82,61 +82,33 @@ public class App
     				res = handleAddActor(t);
     				statusCode = Integer.parseInt(res);
     			}else if(path.equals("/api/v1/deleteActor") && method.equals("DELETE")){
-					res = handleDeleteActor(t);
-					statusCode = Integer.parseInt(res);
+					handleDeleteActor(t);
 				}else if(path.equals("/api/v1/addMovie") && method.equals("PUT")) {
     				res = handleAddMovie(t);
     				statusCode = Integer.parseInt(res);
     			}else if(path.equals("/api/v1/deleteMovie") && method.equals("DELETE")){
-					res = handleDeleteMovie(t);
-					statusCode = Integer.parseInt(res);
+					handleDeleteMovie(t);
 				}else if(path.equals("/api/v1/addRelationship") && method.equals("PUT")){
 					res = handleAddRelationship(t);
 					statusCode = Integer.parseInt(res);
 				}else if(path.equals("/api/v1/deleteRelationship") && method.equals("DELETE")){
-					res = handleDeleteRelationship(t);
-					statusCode = Integer.parseInt(res);
+					handleDeleteRelationship(t);
 				}else if(path.equals("/api/v1/getActor") && method.equals("GET")){
-					res = handleGetActor(t);
-					if(res == "404"){
-						statusCode = Integer.parseInt(res);
-					}
+					handleGetActor(t);
 				}else if(path.equals("/api/v1/getMovie") && method.equals("GET")){
-					res = handleGetMovie(t);
-					if(res == "404"){
-						statusCode = Integer.parseInt(res);
-					}
+					handleGetMovie(t);
 				}else if(path.equals("/api/v1/hasRelationship") && method.equals("GET")){
-					res = handleHasRelationship(t);
-					// AT THIS POINT ONLY IF NO MOVIE/ACTOR EXISTS, WE WILL GET A 404 OTHERWISE IT WILL BE 200 BECAUSE WE ARE CHECKING FOR 400 OUTSIDE OF THE FUNCTION SO NO NEED TO PARSE ALL THE CODES 200 RESPONSE WILL BE DIFFERENT 
-					if(res == "404"){
-						statusCode = Integer.parseInt(res);
-					}
+					handleHasRelationship(t);
 				}else if(path.equals("/api/v1/computeBaconNumber") && method.equals("GET")) {
-    				res = computeBaconNumber(t);
-    				if(res == "404"){
-						statusCode = Integer.parseInt(res);
-					}
+    				computeBaconNumber(t);
     			}else if(path.equals("/api/v1/computeBaconPath") && method.equals("GET")){
-					res = computeBaconPath(t);
-    				if(res == "404"){
-						statusCode = Integer.parseInt(res);
-					}
+					computeBaconPath(t);
 				}else if(path.equals("/api/v1/mostFrequent") && method.equals("GET")){
-					res = handleMostFreq(t);
-					if(res == "404"){
-						statusCode = Integer.parseInt(res);
-					}
+					handleMostFreq(t);
 				}else if(path.equals("/api/v1/shortestPath") && method.equals("GET")){
-					res = handleShortestPath(t);
-					if(res == "404"){
-						statusCode = Integer.parseInt(res);
-					}
+					handleShortestPath(t);
 				}else if(path.equals("/api/v1/getActorOverview") && method.equals("GET")){
 					handleActorOverview(t);
-					// if(res == "404"){
-					// 	statusCode = Integer.parseInt(res);
-					// }
 				}else {
     				res = "Invalid Path or Method";
     				t.sendResponseHeaders(404, res.getBytes().length);
@@ -224,13 +196,12 @@ public class App
 			return responseCode;
     	}
 
-		private String handleDeleteRelationship(HttpExchange t) throws JSONException, IOException {
+		private void handleDeleteRelationship(HttpExchange t) throws JSONException, IOException {
 			Connection nb = new Connection();
 			String query = t.getRequestURI().getQuery();
 			String movieId = null;
 			String actorId = null;
 			String res = "";
-			int statusCode = 0;
 
 			if(query != null){
 				for(String param: query.split("&")){
@@ -245,31 +216,26 @@ public class App
 			}
 
 			if(actorId == null || movieId == null){
-				res = "Invalid Body";
-				statusCode = 400;
-				t.sendResponseHeaders(statusCode, res.getBytes().length);
-				OutputStream os = t.getResponseBody();
-				os.write(res.getBytes());
-				os.close();
-				return null;
+				returnResponse(t, 400, "Invalid Body");
 			}
 
 			if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("^nm\\d+$") || !movieId.matches("^nm\\d+$")) {
-				return "404";
+				returnResponse(t, 400, "Invalid Body");
 			}
 
 			if (!nb.actorExists(actorId) || !nb.movieExists(movieId)) {
-				return "404";	
+				returnResponse(t, 404, "Actor or Movie Doesnt Exist");
 			}
 
 			if(!nb.hasRelationship(actorId, movieId)){
-				return "404";
+				returnResponse(t, 404, "No relationships exist");
 			}
 
 			res = nb.deleteRelationship(actorId, movieId);
-			return res;
+			returnResponse(t, 200, res);
 		}
-		private String handleHasRelationship(HttpExchange t) throws IOException, JSONException {
+		
+		private void handleHasRelationship(HttpExchange t) throws IOException, JSONException {
 			Connection nb = new Connection();
     	    String query = t.getRequestURI().getQuery();
 			String actorId = null;
@@ -290,23 +256,17 @@ public class App
 			}
 
 			if(actorId == null || movieId == null){
-				res = "INVALD BODY";
-				statusCode = 400;
-                t.sendResponseHeaders(statusCode, res.getBytes().length);
-                OutputStream os = t.getResponseBody();
-                os.write(res.getBytes());
-                os.close();
-                return null;
+				returnResponse(t, 400, "Invalid Body");
 			}
 			
     	    
 
 			if (actorId.isEmpty() || movieId.isEmpty() || !actorId.matches("^nm\\d+$") || !movieId.matches("^nm\\d+$")) {
-    	        return "404";
+    	        returnResponse(t, 404, "Invalid Body");
     	    }
 
 			if (!nb.actorExists(actorId) || !nb.movieExists(movieId)) {
-    	        return "404";	
+    	        returnResponse(t, 404, "Actor Doesnt Exist");
     	    }
 
 			boolean hasRel = nb.hasRelationship(actorId, movieId);
@@ -315,18 +275,17 @@ public class App
 			resObj.put("movieId", movieId);
 			resObj.put("hasRelationship", hasRel);
 			if(!hasRel){
-				return "404";
+				returnResponse(t, 404, "No Relationship Exists");
 			}
 			res = resObj.toString();
-			return res;
+			returnResponse(t, 200, res);
 		}
 
-		private String handleDeleteMovie(HttpExchange t) throws IOException, JSONException{
+		private void handleDeleteMovie(HttpExchange t) throws IOException, JSONException{
 			Connection nb = new Connection();
 			String query = t.getRequestURI().getQuery();
 			String movieId = null;
 			String res = "";
-			int statusCode = 0;
 
 			if(query != null){
 				for(String param: query.split("&")){
@@ -339,33 +298,26 @@ public class App
 			}
 
 			if(movieId == null){
-				res = "INVALID BODY";
-				statusCode = 400;
-				t.sendResponseHeaders(statusCode, res.getBytes().length);
-				OutputStream os = t.getResponseBody();
-				os.write(res.getBytes());
-				os.close();
-				return null;
+				returnResponse(t, 400, "Invalid Body");
 			}
 
 			if(movieId.isEmpty() || !movieId.matches("^nm\\d+$")){
-				return "404";
+				returnResponse(t, 400, "Invalid Body");
 			}
 
 			if(!nb.movieExists(movieId)){
-				return "404";
+				returnResponse(t, 404, "Movie Doesnt Exist");
 			}
 
 			res = nb.deleteMovie(movieId);
-			return res;
+			returnResponse(t, 200, res);
 		}
 
-		private String handleDeleteActor(HttpExchange t) throws IOException, JSONException{
+		private void handleDeleteActor(HttpExchange t) throws IOException, JSONException{
 			Connection nb = new Connection();
 			String query = t.getRequestURI().getQuery();
 			String actorId = null;
 			String res = "";
-			int statusCode = 0;
 
 			if(query != null){
 				for(String param: query.split("&")){
@@ -378,33 +330,26 @@ public class App
 			}
 
 			if(actorId == null){
-				res = "INVALID BODY";
-				statusCode = 400;
-				t.sendResponseHeaders(statusCode, res.getBytes().length);
-				OutputStream os = t.getResponseBody();
-				os.write(res.getBytes());
-				os.close();
-				return null;
+				returnResponse(t, 400, "Invalid Body");
 			}
 
 			if(actorId.isEmpty() || !actorId.matches("^nm\\d+$")){
-				return "404";
+				returnResponse(t, 400, "Invalid Body");
 			}
 
 			if(!nb.actorExists(actorId)){
-				return "404";
+				returnResponse(t, 404, "Actor Doesnt Exist");
 			}
 
 			res = nb.deleteActor(actorId);
-			return res;
+			returnResponse(t, 200, res);
 		}
 
-		private String handleGetActor(HttpExchange t) throws IOException, JSONException {
+		private void handleGetActor(HttpExchange t) throws IOException, JSONException {
 			Connection nb = new Connection();
     		String query = t.getRequestURI().getQuery();
 			String actorId = null;
 			String res = "";
-			int statusCode;
 
 			if(query != null){
 				for(String param: query.split("&")){
@@ -417,22 +362,16 @@ public class App
 			}
 
 			if(actorId == null){
-				res = "INVALD BODY";
-				statusCode = 400;
-                t.sendResponseHeaders(statusCode, res.getBytes().length);
-                OutputStream os = t.getResponseBody();
-                os.write(res.getBytes());
-                os.close();
-                return null;
+				returnResponse(t, 400, "Invalid Body");
 			}
 
 
 			if(actorId.isEmpty() || !actorId.matches("^nm\\d+$")) {
-				return "404";
+				returnResponse(t, 404, "Invalid Body");
 			}
 
 			if(!nb.actorExists(actorId)){
-				return "404";
+				returnResponse(t, 404, "Actor Doesnt Exist");
 			}
 
 			String actorName = nb.getActorName(actorId);
@@ -445,7 +384,7 @@ public class App
 
 			JSONObject resObj = new JSONObject(resMap);
 			res = resObj.toString();
-			return res;
+			returnResponse(t, 200,res);
 		}
 
 		private void handleActorOverview(HttpExchange t) throws IOException, JSONException {
@@ -487,7 +426,7 @@ public class App
 			returnResponse(t, statusCode, res);
 		}
 
-		private String handleGetMovie(HttpExchange t)  throws IOException, JSONException{
+		private void handleGetMovie(HttpExchange t)  throws IOException, JSONException{
 			Connection nb = new Connection();
     		String query = t.getRequestURI().getQuery();
 			String movieId = null;
@@ -511,16 +450,15 @@ public class App
                 OutputStream os = t.getResponseBody();
                 os.write(res.getBytes());
                 os.close();
-                return null;
 			}
 
 
 			if(movieId.isEmpty() || !movieId.matches("^nm\\d+$")) {
-				return "404";
+				returnResponse(t, 404, "Invalid Body");
 			}
 
 			if(!nb.movieExists(movieId)){
-				return "404";
+				returnResponse(t, 404, "Movie Doesnt Exist");
 			}
 
 			String movieName = nb.getMovieName(movieId);
@@ -533,15 +471,14 @@ public class App
 
 			JSONObject resObj = new JSONObject(resMap);
 			res = resObj.toString();
-			return res;
+			returnResponse(t, 200, res);
 		}
 		
-		private String computeBaconNumber(HttpExchange t) throws IOException, JSONException {
+		private void computeBaconNumber(HttpExchange t) throws IOException, JSONException {
 			Connection nb = new Connection();
 			String query = t.getRequestURI().getQuery();
 			String actorId = null;
 			String res = "";
-			int statusCode;
 
 			if(query != null){
 				for(String param: query.split("&")){
@@ -554,29 +491,22 @@ public class App
 			}
 
 			if(actorId == null){
-				res = "INVALD BODY";
-				statusCode = 400;
-                t.sendResponseHeaders(statusCode, res.getBytes().length);
-                OutputStream os = t.getResponseBody();
-                os.write(res.getBytes());
-                os.close();
-                return null;
+				returnResponse(t, 400, "Invalid Body");
 			}
 			
 			if(actorId.isEmpty() || !actorId.matches("^nm\\d+$")) {
-				return "404";
+				returnResponse(t, 404, "Invalid Body");
 			}
 
 			if(!nb.actorExists(actorId)){
-				return "404";
+				returnResponse(t, 404, "Actor doesnt exist");
 			}
 			
 			int baconNumber = nb.getBaconNumber(actorId);
 			JSONObject resObj = new JSONObject();
 			resObj.put("baconNumber", baconNumber);
 			res = resObj.toString();
-
-			return res;
+			returnResponse(t, 200,res);
 		}
 
 		private String computeBaconPath(HttpExchange t) throws IOException, JSONException {
@@ -584,7 +514,6 @@ public class App
 			String query = t.getRequestURI().getQuery();
 			String actorId = null;
 			String res = "";
-			int statusCode;
 
 			if(query != null){
 				for(String param: query.split("&")){
@@ -597,13 +526,7 @@ public class App
 			}
 
 			if(actorId == null){
-				res = "INVALD BODY";
-				statusCode = 400;
-                t.sendResponseHeaders(statusCode, res.getBytes().length);
-                OutputStream os = t.getResponseBody();
-                os.write(res.getBytes());
-                os.close();
-                return null;
+				returnResponse(t, 400, "Invalid Body");
 			}
 
 			if(actorId.isEmpty() || !actorId.matches("^nm\\d+$")) {
@@ -622,14 +545,14 @@ public class App
 			return res;
 		}
 
-		private String handleMostFreq(HttpExchange t) throws IOException, JSONException {
+		private void handleMostFreq(HttpExchange t) throws IOException, JSONException {
 			Connection nb = new Connection();
 			List<List<String>> actorPairs = nb.getActorPairFreq();
 			List<List<String>> mostFreqActors = new ArrayList<>();
 			String res = "";
 			
 			if(actorPairs.isEmpty()){
-				return "404";
+				returnResponse(t, 404, "No pairs exist");
 			}
 
 			Map<List<String>, Integer> freqMap = new HashMap<>();
@@ -655,10 +578,10 @@ public class App
     		}	
 
 			res = jsonArray.toString();
-			return res;
+			returnResponse(t, 200,res);
 		}
 
-		private String handleShortestPath(HttpExchange t) throws IOException, JSONException {
+		private void handleShortestPath(HttpExchange t) throws IOException, JSONException {
 			Connection nb = new Connection();
 			String query = t.getRequestURI().getQuery();
 			String actor1Id = null;
@@ -679,19 +602,16 @@ public class App
 			}
 
 			if (actor1Id.isEmpty() || actor2Id.isEmpty() || !actor1Id.matches("^nm\\d+$") || !actor2Id.matches("^nm\\d+$")) {
-				System.out.println("BAD BODY");
-    	        return "404";
+				returnResponse(t, 404, "Invalid Body");
     	    }
 
 			if(!nb.actorExists(actor1Id) || !nb.actorExists(actor2Id)){
-				System.out.println("DOESNT EXIST");
-				return "404";
+				returnResponse(t, 404, "Actor Not Found");
 			}
 
 			List<String> path = nb.shortestPath(actor1Id, actor2Id);
 			if(path == null || path.isEmpty()) {
-				System.out.println("NULL");
-				return "404";
+				returnResponse(t, 404, "No path exists");
 			}
 
 			JSONArray jsonPath = new JSONArray();
@@ -700,7 +620,7 @@ public class App
 			}
 
 			res = jsonPath.toString();
-			return res;
+			returnResponse(t, 200, res);
 		}
 
 	}
