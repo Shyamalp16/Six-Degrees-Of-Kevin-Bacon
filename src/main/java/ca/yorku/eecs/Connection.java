@@ -18,7 +18,6 @@ import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.exceptions.Neo4jException;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
-import java.util.HashMap; 
 import java.util.LinkedHashMap; 
 import java.util.Map;
 
@@ -302,7 +301,7 @@ public class Connection {
 	}
 
 	public String[] getMovieActors(String movieId){
-		List<String> actorNames = new ArrayList();
+		List<String> actorNames = new ArrayList<String>();
 		try(Session session = driver.session()){
 			String checkQuery = "MATCH (m:movie {id: \"" + movieId + "\"})-[r:ACTED_IN]-(a:actor) RETURN a.id";
 			StatementResult cursor = session.run(checkQuery, Values.parameters("movieId", movieId));

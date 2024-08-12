@@ -62,7 +62,6 @@ public class AppTest extends TestCase
             HttpURLConnection conDel = (HttpURLConnection) urlDel.openConnection();
             conDel.setRequestMethod("DELETE");
             conDel.setRequestProperty("Accept", "application/json");
-            int code = conDel.getResponseCode();
             assertEquals(200, codeCon);
 
         }catch(IOException e){
@@ -93,7 +92,6 @@ public class AppTest extends TestCase
             HttpURLConnection conDel = (HttpURLConnection) urlDel.openConnection();
             conDel.setRequestMethod("DELETE");
             conDel.setRequestProperty("Accept", "application/json");
-            int code = conDel.getResponseCode();
             assertEquals(200, codeCon);
 
         }catch(IOException e){
@@ -182,7 +180,6 @@ public class AppTest extends TestCase
             HttpURLConnection conDel = (HttpURLConnection) urlDel.openConnection();
             conDel.setRequestMethod("DELETE");
             conDel.setRequestProperty("Accept", "application/json");
-            int codeDel = conDel.getResponseCode();
 
             String r = nb.deleteRelationship("nm100","nm101");
             r = nb.deleteActor("nm100");

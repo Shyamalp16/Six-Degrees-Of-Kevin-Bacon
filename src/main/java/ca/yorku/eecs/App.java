@@ -59,6 +59,7 @@ public class App
                 os.close();
                 return null;
 			}
+			
             return jsonObject;
     	}
     
@@ -240,7 +241,6 @@ public class App
     	    String query = t.getRequestURI().getQuery();
 			String actorId = null;
 			String movieId = null;
-			int statusCode;
 			String res = "";
 
 			if(query != null){
@@ -392,7 +392,6 @@ public class App
 			String query = t.getRequestURI().getQuery();
 			String actorId = null;
 			String res = "";
-			int statusCode;
 
 			if(query != null){
 				for(String param: query.split("&")){
@@ -406,8 +405,7 @@ public class App
 
 			if(actorId == null){
 				res = "Invalid Body";
-				statusCode = 400;
-				returnResponse(t, 40, "Invalid Body");
+				returnResponse(t, 400, "Invalid Body");
 			}
 
 			if(actorId.isEmpty() || !actorId.matches("^nm\\d+$")){
@@ -422,8 +420,7 @@ public class App
 			JSONObject resObj = new JSONObject(actorOverview);
 			res = resObj.toString();
 			
-			statusCode = 200;
-			returnResponse(t, statusCode, res);
+			returnResponse(t, 200, res);
 		}
 
 		private void handleGetMovie(HttpExchange t)  throws IOException, JSONException{
@@ -431,7 +428,6 @@ public class App
     		String query = t.getRequestURI().getQuery();
 			String movieId = null;
 			String res = "";
-			int statusCode;
 
 			if(query != null){
 				for(String param: query.split("&")){
@@ -444,12 +440,7 @@ public class App
 			}
 
 			if(movieId == null){
-				res = "INVALD BODY";
-				statusCode = 400;
-                t.sendResponseHeaders(statusCode, res.getBytes().length);
-                OutputStream os = t.getResponseBody();
-                os.write(res.getBytes());
-                os.close();
+				returnResponse(t, 400, "Invalid Body");
 			}
 
 
@@ -586,7 +577,6 @@ public class App
 			String query = t.getRequestURI().getQuery();
 			String actor1Id = null;
 			String actor2Id = null;
-			int statusCode;
 			String res = "";
 
 			if(query != null){
